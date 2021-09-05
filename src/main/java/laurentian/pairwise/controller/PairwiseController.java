@@ -11,7 +11,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping(value = "${app.version.v1}")
@@ -23,8 +27,9 @@ public class PairwiseController {
         this.nodeRepository = nodeRepository;
     }
 
-    /** This is to create the root node and add the node to the existing node
-     * */
+    /**
+     * This is to create the root node and add the node to the existing node
+     */
     @RequestMapping(value = "/pairwise", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity<Object> pairwiseAddNode(@RequestBody Node node) {
@@ -51,6 +56,7 @@ public class PairwiseController {
             /**
              * saving the node in the database.
              * */
+            node.setValue(100);
             nodeRepository.save(node);
         }
         /**
@@ -97,7 +103,7 @@ public class PairwiseController {
 
     /**
      * This is to delete the node and it's children
-     * */
+     */
     @RequestMapping(value = "/pairwise", method = RequestMethod.DELETE)
     public @ResponseBody
     ResponseEntity<Object> pairwiseDeleteNode(@RequestParam Long nodeId) {
@@ -122,7 +128,7 @@ public class PairwiseController {
             /** Now we can delete the node itself as it now de-associated from it's parent. So it will get deleted from database.
              * */
             nodeRepository.delete(node);
-        }else{
+        } else {
             /**
              * When nodeName is ROOT the we will delete it directly. Also notice we are not checking whether nodeName is ROOT because in previous
              * if condition we checked whether nodeName is "NOT ROOT"
@@ -142,11 +148,11 @@ public class PairwiseController {
          * So here we are checking based on primary key i.e. node.getId() whether the requestBody nodeName is same as in database
          * or the user is trying to change the name of the node i.e. nodeName().
          * */
-        if(!node.getNodeName().equalsIgnoreCase(nodeRepository.findById(node.getId()).orElse(null).getNodeName())){
+        if (!node.getNodeName().equalsIgnoreCase(nodeRepository.findById(node.getId()).orElse(null).getNodeName())) {
             /** Here we are checking whether the new nodeName which user trying to change already exists in database or not.
              * If it exists in database i.e. a node with such nodeName already available in the DB then we are going to throw an error.
              * */
-            if(nodeRepository.findByNodeName(node.getNodeName())!=null){
+            if (nodeRepository.findByNodeName(node.getNodeName()) != null) {
                 return new ResponseEntity("Node Name Already Exist, Try Different", HttpStatus.BAD_REQUEST);
             }
         }
@@ -166,18 +172,134 @@ public class PairwiseController {
         return new ResponseEntity<>(all, HttpStatus.ACCEPTED);
     }
 
+    /**
+     * This is going to be the input which we will received as an array from UI or  API
+     * Since array has 3 element so matrix size will be 3*3
+     * If input size is 6 then it will be 4*4 matrix ( 4 half is 2 so 4*2 - 2)
+     * If input size is 10 then it will be 5*5 matrix (5 * 2)
+     * If input size is 15 then it will be 6*6 matrix (6 half is 3 so 6*3 - 3)
+     * If input size is 21 then it will be 7*7 matrix (7 * 3)
+     * If input size is 28 then it will be 8*8 matrix (8 half is 4 so 8*4 - 4)
+     * If input size is 26 then it will be 9** matrix ( 9 * 4 )
+     */
     @RequestMapping(value = "/analyze", method = RequestMethod.GET)
     public @ResponseBody
     ResponseEntity<Object> pairwiseAnalyze(@RequestBody Node node) {
-      
-        if(node.getChildren().size() + 1 < 3){
+        /** A node must have atleast three direct children. Inheritance children are not allowed.
+         * Thus we will throw an error if a node has less than 3 nodes.
+         * */
+        if (node.getChildren().size() < 3) {
             return new ResponseEntity("Node must have at least 3 Child Node", HttpStatus.BAD_REQUEST);
-        }else{
+        } else {
             /**
-             * Get the node values from the list and save in another list and use your nodepad++ logic to analyze it.
+             * if there are 3 children then it will be 3*3 matrix, when 4 children then we will have 4*4 matrix
+             * Since it is a square matrix so we will set rowcount equal to column count.
              * */
+            int rowCount = node.getChildren().size();
+            int colCount = rowCount;
+            /** We will save result in double dimension array.
+             * */
+            double[][] result = new double[rowCount][colCount];
+            /** If we have four input then it means we have to create a 4*4 matrix.
+             * So total of 6 values are required in upper triangle but we have only 4 value as in input.
+             * So rest two more input's we will create behind the scene and put a flag to showInTree as false.
+             *  ShowInTree is yet to be implement as it will be a boolean field.
+             * */
+            if (rowCount == 4) {
+                for (int i = 0; i < 2; i++) {
+                    Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
+                    pairwiseAddNode(tempNode);
+                }
+            }
+            if (rowCount == 5) {
+                for (int i = 0; i < 5; i++) {
+                    Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
+                    pairwiseAddNode(tempNode);
+                }
+            }
+            if (rowCount == 6) {
+                for (int i = 0; i < 9; i++) {
+                    Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
+                    pairwiseAddNode(tempNode);
+                }
+            }
+            if (rowCount == 7) {
+                for (int i = 0; i < 14; i++) {
+                    Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
+                    pairwiseAddNode(tempNode);
+                }
+            }
+            if (rowCount == 8) {
+                for (int i = 0; i < 20; i++) {
+                    Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
+                    pairwiseAddNode(tempNode);
+                }
+            }
+            if (rowCount == 9) {
+                for (int i = 0; i < 27; i++) {
+                    Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
+                    pairwiseAddNode(tempNode);
+                }
+            }
+            ArrayList<Double> inputList = new ArrayList<>();
+            /**
+             * The reason we are getting the children from repo or database because we have updated
+             * the database with more entries in previous steps. Thus upto data is required.
+             * */
+            for (Node tempNode : nodeRepository.findByNodeName(node.getNodeName()).getChildren()) {
+                inputList.add(tempNode.getValue());
+            }
+            /** All the input data will be stored in double array as it will be easy for calculation.
+             * */
+            double[] doubleInput = inputList.stream().mapToDouble(element -> element).toArray();
+            int k = 0;
+            for (int row = 0; row < rowCount; row++) {
+                for (int column = 0; column < colCount; column++) {
+                    if (row == column) {
+                        result[row][column] = 1;
+                    }
+                    if (row < column) {
+                        /** Change the values in the database so that it will be easy for the UI
+                         * You must update these values using repo to the right nodeName.
+                         * */
+                        result[row][column] = round(doubleInput[k++], 2);
+                    }
+                }
+            }
+
+            k = 0;
+            for (int row = 0; row < rowCount; row++) {
+                for (int column = 0; column < colCount; column++) {
+                    if (row == column) {
+                        result[row][column] = 1;
+                    }
+                    if (row > column) {
+                        /** These value changes are not required as these will be lowe triangle for visulation.
+                         * */
+                        result[row][column] = round((float) 1 / doubleInput[k++], 2);
+                    }
+                }
+
+            }
+            /**
+             * This is printing the matrix
+             * */
+            for (int i = 0; i < result.length; i++) {
+                for (int j = 0; j < result[i].length; j++) {
+                    System.out.print(result[i][j] + "\t \t \t \t");
+                }
+                System.out.println();
+            }
         }
         List<Node> all = nodeRepository.findAll();
         return new ResponseEntity<>(all, HttpStatus.ACCEPTED);
+    }
+
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        BigDecimal bd = BigDecimal.valueOf(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 }

@@ -259,7 +259,8 @@ public class PairwiseController {
                         result[row][column] = 1;
                     }
                     if (row < column) {
-                        /** Change the values in the database so that it will be easy for the UI
+                        /** Change the values in the database as well as in the double dimension array
+                         *  which you will create to send to UI to display the table. so that it will be easy for the UI
                          * You must update these values using repo to the right nodeName.
                          * */
                         result[row][column] = round(doubleInput[k++], 2);

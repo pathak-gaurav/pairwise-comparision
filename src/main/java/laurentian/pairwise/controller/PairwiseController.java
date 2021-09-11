@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -185,18 +185,29 @@ public class PairwiseController {
     @RequestMapping(value = "/analyze", method = RequestMethod.GET)
     public @ResponseBody
     ResponseEntity<Object> pairwiseAnalyze(@RequestBody Node node) {
+
+
         /** A node must have atleast three direct children. Inheritance children are not allowed.
          * Thus we will throw an error if a node has less than 3 nodes.
          * */
         if (node.getChildren().size() < 3) {
             return new ResponseEntity("Node must have at least 3 Child Node", HttpStatus.BAD_REQUEST);
         } else {
+
             /**
              * if there are 3 children then it will be 3*3 matrix, when 4 children then we will have 4*4 matrix
              * Since it is a square matrix so we will set rowcount equal to column count.
              * */
             int rowCount = node.getChildren().size();
             int colCount = rowCount;
+
+            /**
+             * This is to show a matrix with all elements as 1 because once clicking on Analyze
+             * A Matrix should show up with all the 1 values.
+             * */
+            double[][] arr = new double[rowCount][colCount];
+            Arrays.stream(arr).forEach(a -> Arrays.fill(a, 1));
+
             /** We will save result in double dimension array.
              * */
             double[][] result = new double[rowCount][colCount];
@@ -241,59 +252,62 @@ public class PairwiseController {
                     pairwiseAddNode(tempNode);
                 }
             }
-            ArrayList<Double> inputList = new ArrayList<>();
-            /**
-             * The reason we are getting the children from repo or database because we have updated
-             * the database with more entries in previous steps. Thus upto data is required.
-             * */
-            for (Node tempNode : nodeRepository.findByNodeName(node.getNodeName()).getChildren()) {
-                inputList.add(tempNode.getValue());
-            }
-            /** All the input data will be stored in double array as it will be easy for calculation.
-             * */
-            double[] doubleInput = inputList.stream().mapToDouble(element -> element).toArray();
-            int k = 0;
-            for (int row = 0; row < rowCount; row++) {
-                for (int column = 0; column < colCount; column++) {
-                    if (row == column) {
-                        result[row][column] = 1;
-                    }
-                    if (row < column) {
-                        /** Change the values in the database as well as in the double dimension array
-                         *  which you will create to send to UI to display the table. so that it will be easy for the UI
-                         * You must update these values using repo to the right nodeName.
-                         * */
-                        result[row][column] = round(doubleInput[k++], 2);
-                    }
-                }
-            }
+            return new ResponseEntity<>(arr, HttpStatus.ACCEPTED);
+        }
 
-            k = 0;
-            for (int row = 0; row < rowCount; row++) {
-                for (int column = 0; column < colCount; column++) {
-                    if (row == column) {
-                        result[row][column] = 1;
-                    }
-                    if (row > column) {
-                        /** These value changes are not required as these will be lowe triangle for visulation.
-                         * */
-                        result[row][column] = round((float) 1 / doubleInput[k++], 2);
-                    }
-                }
+    }
 
-            }
+    @RequestMapping(value = "/update", method = RequestMethod.GET)
+    public @ResponseBody
+    ResponseEntity<Object> pairwiseUpdate(@RequestBody double[][] inputArray) {
+
+        /**
+         * Although it has to be a square matrix but the length of row and column is taken to check
+         * whether matrix is a square matrix or not.
+         * Also this row and column count will later use in loop for assignment.
+         * */
+        int rowCount = inputArray.length;
+        int colCount = inputArray[0].length;
+
+        /** This double result array will hold the result and will be sent to UI for show in a table.
+         * */
+        double[][] resultArray = new double[rowCount][colCount];
+        /** Since it has to be a square matrix if row and column count is not matched then we will throw an error.
+         * */
+        if (rowCount != colCount || rowCount <= 3 || colCount <= 3) {
+            return new ResponseEntity<>("Should be a square Matrix", HttpStatus.BAD_REQUEST);
+        } else {
             /**
-             * This is printing the matrix
+             * If row and column count are same and greater than 3 then we will perform action on the data.
              * */
-            for (int i = 0; i < result.length; i++) {
-                for (int j = 0; j < result[i].length; j++) {
-                    System.out.print(result[i][j] + "\t \t \t \t");
+            for (int row = 0; row < rowCount; row++) {
+                for (int col = 0; col < colCount; col++) {
+
+                    /** If row == col then it means we are talking about the diagonal elements which always has to be one.
+                     * */
+                    if (row == col) {
+                        resultArray[row][col] = 1;
+
+                        /** Here if row is smaller than column then we are talking about upper triangular matrix.
+                         * result_array will fill with the input_array data of upper triangle element.
+                         * */
+                    } else if (row < col) {
+                        resultArray[row][col] = inputArray[row][col];
+
+                        /** Here we update the lower triangular matrix.
+                         * */
+                    } else if (row > col) {
+                        /** Note that on right hand side column and row position is switched. As this is required to
+                         * update the element of lower triangle with (1/upper_triangle).
+                         * So consider if we want to update lower triangle [2][0] element than the formula has to be
+                         *  (1/[0][2]), here [0][2] element belongs to upper triangle.
+                         * */
+                        resultArray[row][col] = round(1 / inputArray[col][row], 2);
+                    }
                 }
-                System.out.println();
             }
         }
-        List<Node> all = nodeRepository.findAll();
-        return new ResponseEntity<>(all, HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(resultArray, HttpStatus.ACCEPTED);
     }
 
     public static double round(double value, int places) {

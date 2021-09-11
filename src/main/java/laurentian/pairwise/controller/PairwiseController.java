@@ -269,12 +269,13 @@ public class PairwiseController {
         int rowCount = inputArray.length;
         int colCount = inputArray[0].length;
 
+
         /** This double result array will hold the result and will be sent to UI for show in a table.
          * */
         double[][] resultArray = new double[rowCount][colCount];
         /** Since it has to be a square matrix if row and column count is not matched then we will throw an error.
          * */
-        if (rowCount != colCount || rowCount <= 3 || colCount <= 3) {
+        if (rowCount != colCount || rowCount < 3 || colCount < 3) {
             return new ResponseEntity<>("Should be a square Matrix", HttpStatus.BAD_REQUEST);
         } else {
             /**
@@ -292,7 +293,7 @@ public class PairwiseController {
                          * result_array will fill with the input_array data of upper triangle element.
                          * */
                     } else if (row < col) {
-                        resultArray[row][col] = inputArray[row][col];
+                        resultArray[row][col] = round(inputArray[row][col], 2);
 
                         /** Here we update the lower triangular matrix.
                          * */
@@ -306,6 +307,48 @@ public class PairwiseController {
                     }
                 }
             }
+        }
+        /** This will be used to save the product of rows which we receive from UI
+         * */
+        double product[] = new double[rowCount];
+        /** This temp variable is declared because it helps to store the result of addition of each matrix row.
+         * */
+        double temp = 1;
+        /** Since it is a double dimension resultArray thus we have used inner loop as well.
+         * This will add element in each row and save it in temp variable.
+         * */
+        for (int row = 0; row < resultArray.length; row++) {
+            for (int col = 0; col < resultArray[row].length; col++) {
+                temp = temp * resultArray[row][col];
+            }
+            /** Here we have to calculate fraction power because using fraction directly in pow method will result in
+             * ignoring the demonitor of rational number in this case 1/3 so it will ignore 3 and will consider only 1.
+             * */
+            double fractionPower = (double) 1 / rowCount;
+            /** As per pairwise the addition should be multiplied with power of 1/rowCount to get production of each
+             * matrix row.
+             * */
+            product[row] = round(Math.pow(temp, fractionPower), 2);
+            /** Here we are just resetting the temp value so that for next iteration it does not have any other
+             * garbage value from previous iteration.
+             * */
+            temp = 1;
+        }
+        /** Here we have declared the new variable to store the sum of all the elements in product array
+         * Initially we have initialised it with zero.
+         * */
+        double additionOfProductArray = 0.0;
+        /** Looping over thr product array so that it's element can be added and save in additionOfProductArray variable
+         * */
+        for (int element = 0; element < product.length; element++) {
+            additionOfProductArray += product[element];
+        }
+        /** Pairwise asked us to calculate the productElement/SUM so for this we declare a new array to store the result.
+         * for each row.
+         * */
+        double elementFromDivAndAddition[] = new double[rowCount];
+        for(int element = 0 ; element < product.length ; element ++){
+            elementFromDivAndAddition[element] = round(product[element] / additionOfProductArray , 2);
         }
         return new ResponseEntity<>(resultArray, HttpStatus.ACCEPTED);
     }

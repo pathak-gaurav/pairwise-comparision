@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -293,7 +295,7 @@ public class PairwiseController {
                          * result_array will fill with the input_array data of upper triangle element.
                          * */
                     } else if (row < col) {
-                        resultArray[row][col] = round(inputArray[row][col], 2);
+                        resultArray[row][col] = round(inputArray[row][col], 3);
 
                         /** Here we update the lower triangular matrix.
                          * */
@@ -303,7 +305,7 @@ public class PairwiseController {
                          * So consider if we want to update lower triangle [2][0] element than the formula has to be
                          *  (1/[0][2]), here [0][2] element belongs to upper triangle.
                          * */
-                        resultArray[row][col] = round(1 / inputArray[col][row], 2);
+                        resultArray[row][col] = round(1 / inputArray[col][row], 3);
                     }
                 }
             }
@@ -328,7 +330,7 @@ public class PairwiseController {
             /** As per pairwise the addition should be multiplied with power of 1/rowCount to get production of each
              * matrix row.
              * */
-            product[row] = round(Math.pow(temp, fractionPower), 2);
+            product[row] = round(Math.pow(temp, fractionPower), 3);
             /** Here we are just resetting the temp value so that for next iteration it does not have any other
              * garbage value from previous iteration.
              * */
@@ -347,9 +349,68 @@ public class PairwiseController {
          * for each row.
          * */
         double elementFromDivAndAddition[] = new double[rowCount];
-        for(int element = 0 ; element < product.length ; element ++){
-            elementFromDivAndAddition[element] = round(product[element] / additionOfProductArray , 2);
+        for (int element = 0; element < product.length; element++) {
+            elementFromDivAndAddition[element] = round(product[element] / additionOfProductArray, 3);
         }
+
+        /** Calculation of GM Matrix Section Start
+         * */
+
+        /** We are creating an ArrayList to set the element in upper triangular GM Matrix
+         * There is a formula for this that 1stElement - 2ndElement and then 1stElement - 3rdElement
+         * So that's why we needed a for loop to perform this set of Action.
+         * */
+        ArrayList<Double> tempList = new ArrayList<>();
+        for (int i = 0; i < elementFromDivAndAddition.length; i++) {
+            for (int j = 0; j < elementFromDivAndAddition.length; j++) {
+                if (i != j && i < j) {
+                    tempList.add(round(elementFromDivAndAddition[i]/elementFromDivAndAddition[j],3)) ;
+                }
+            }
+        }
+        /** Converting the ArrayList to Array so that it will easy to insert element directly in GM as we have already
+         * calculated it's value in previous Loop.
+         * */
+        double[] tempDouble = tempList.stream().mapToDouble(Double::doubleValue).toArray();
+
+        /** As reconstructed matrix is also a double dimension matrix like our input matrix.
+         * */
+        double reconstructedGM[][] = new double[rowCount][colCount];
+        /** This K will help to get the element from tempDouble and help to store in top
+         * triangle of GM, K value will be increased inside the loop so that never a same value will gets stored.
+         * */
+        int k = 0;
+        for (int row = 0; row < rowCount; row++) {
+            for (int col = 0; col < colCount; col++) {
+                if (row == col) {
+                    /** Diagonal will be all 1
+                     * */
+                    reconstructedGM[row][col] = 1;
+                } else if (row < col) {
+                    reconstructedGM[row][col] = round(tempDouble[k], 3);
+                    k++;
+                } else if (row > col) {
+                    /** Element of lower triangle with (1/upper_triangle).
+                     * */
+                    reconstructedGM[row][col] = round(1 / reconstructedGM[col][row], 3);
+                }
+            }
+        }
+
+        /** Excel output is Different than System output need to check whether Subtraction of Matrix is done properly
+         * */
+        String differenceMatrix[][] = new String[rowCount][colCount];
+        for(int row = 0; row < rowCount; row++){
+            for(int col = 0; col < colCount; col++){
+                DecimalFormat decimalFormatter = new DecimalFormat("##.############");
+                decimalFormatter.setMinimumFractionDigits(2);
+                decimalFormatter.setMaximumFractionDigits(15);
+                double tempDoubleToHold = round(resultArray[row][col] - reconstructedGM[row][col],2);
+                differenceMatrix[row][col] =  decimalFormatter.format(round((Math.pow(tempDoubleToHold,2)),6)); //round(Math.pow(tempDoubleToHold,2),5);
+            }
+        }
+
+
         return new ResponseEntity<>(resultArray, HttpStatus.ACCEPTED);
     }
 

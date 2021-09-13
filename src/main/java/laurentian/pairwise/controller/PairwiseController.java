@@ -80,11 +80,35 @@ public class PairwiseController {
              * Once we get the parentNodeId then from the database we will retrieve the Object of that parentNodeId.
              * */
             Node parentNode = nodeRepository.findById(Long.parseLong(parentNodeId)).orElse(null);
+
+            /** Getting the parentNode Children Count, Parent node can be any node let's say ROOT, A, B.
+             * So to set the correct value of children parentNode children size is required.
+             * */
+            int parentNodeChildren = parentNode.getChildren().size();
+            /** Here we are getting the parentNode value i.e. for Root it is 100 and let's say for A it is 100
+             * if A is the only child of ROOT.
+             * */
+            double nodeValue = parentNode.getValue();
+            /** If there are more than one child than root value will be divided among children.
+             * */
+            if(parentNodeChildren >= 1 ){
+                /** +1 is consider based on the current request. Let's say if it already has one Children Node and now
+                 * a request is coming from UI to add another node so the request which is coming from UI has be considered
+                 * as +1.
+                 * */
+                nodeValue = round(nodeValue / (parentNodeChildren + 1 ),2);
+                final double temp = nodeValue;
+                /** Here we will be updating the existing child node value with the correct one as the new request
+                 * has just added another children.
+                 * */
+                parentNode.getChildren().forEach(element -> element.setValue(temp));
+            }
+
             /**
              * We are create a new Node by passing the value in constructor from request body. At this moment
              * this node is not saved in the database.
              * */
-            Node nodeToAdd = new Node(node.getNodeName(), node.getParentNodeId(), node.getValue(), parentNode);
+            Node nodeToAdd = new Node(node.getNodeName(), node.getParentNodeId(), nodeValue, parentNode);
             /**
              * It is also important to maintain the tree structure thus we have to add the created node in previous step
              * to the list of getChildren.
@@ -283,6 +307,7 @@ public class PairwiseController {
             /**
              * If row and column count are same and greater than 3 then we will perform action on the data.
              * */
+            long nodeLoopCounter = 2;
             for (int row = 0; row < rowCount; row++) {
                 for (int col = 0; col < colCount; col++) {
 
@@ -296,6 +321,26 @@ public class PairwiseController {
                          * */
                     } else if (row < col) {
                         resultArray[row][col] = round(inputArray[row][col], 3);
+
+
+                        // TODO
+                        // TODO
+                        // TODO
+                        // TODO
+                        // TODO
+                        // TODO
+
+                        /** This update logic WORK to update the nodeValues but need to ask
+                         * what will be the calculation for it. and which value to be considered from output.
+                         *
+                         * */
+//                        final int rowFinal = row;
+//                        final int colFinal = col;
+//                        Node node = nodeRepository.findById(nodeLoopCounter).get();
+//                        node.setValue(round(inputArray[row][col], 3));
+//                        nodeRepository.save(node);
+//                        nodeLoopCounter++;
+
 
                         /** Here we update the lower triangular matrix.
                          * */
@@ -324,7 +369,7 @@ public class PairwiseController {
                 temp = temp * resultArray[row][col];
             }
             /** Here we have to calculate fraction power because using fraction directly in pow method will result in
-             * ignoring the demonitor of rational number in this case 1/3 so it will ignore 3 and will consider only 1.
+             * ignoring the denominator of rational number in this case 1/3 so it will ignore 3 and will consider only 1.
              * */
             double fractionPower = (double) 1 / rowCount;
             /** As per pairwise the addition should be multiplied with power of 1/rowCount to get production of each

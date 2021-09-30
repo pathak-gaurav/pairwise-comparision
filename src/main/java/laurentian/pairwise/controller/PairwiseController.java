@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.transaction.Transactional;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,6 +37,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping(value = "${app.version.v1}")
@@ -209,12 +211,12 @@ public class PairwiseController {
                                                    RedirectAttributes redirectAttributes) {
 
         String uploadsDir = "/uploads/";
-        String realPathtoUploads = Paths.get(".").normalize().toAbsolutePath().toFile().toString() + uploadsDir;
-        if (!new File(realPathtoUploads).exists()) {
-            new File(realPathtoUploads).mkdir();
+        String realPathToUploads = Paths.get(".").normalize().toAbsolutePath().toFile().toString() + uploadsDir;
+        if (!new File(realPathToUploads).exists()) {
+            new File(realPathToUploads).mkdir();
         }
         String orgName = file.getOriginalFilename();
-        String filePath = realPathtoUploads + orgName;
+        String filePath = realPathToUploads + orgName;
         File dest = new File(filePath);
 
         try {
@@ -244,14 +246,109 @@ public class PairwiseController {
             fis.close();
             myInput.close();
 
+            deleteAllNodeFromDatabase();
+
+            insertNodeFileUpload(rowCount);
 
             dest.delete();
             dest.deleteOnExit();
             finalResult = pairwiseService.updateAfterFinalize(doubleArray);
+            array = finalResult;
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         return new ResponseEntity<>(finalResult, HttpStatus.ACCEPTED);
+    }
+
+    @Transactional
+    public void deleteAllNodeFromDatabase() {
+        if (nodeRepository.findAll().size() > 0) {
+            nodeRepository.findAll().stream().forEach(element -> nodeRepository.delete(element));
+        }
+    }
+
+    private void insertNodeFileUpload(int rowCount) {
+
+        if (rowCount == 3 && nodeRepository.findAll().isEmpty()) {
+            insertFirstThreeNode();
+        }
+        if (rowCount == 4) {
+            if (nodeRepository.findAll().isEmpty()) {
+                insertFirstThreeNode();
+            }
+            if (nodeRepository.findAll().size() == 4) {
+                for (int i = 0; i < 2; i++) {
+                    incrementNodeIfCountMoreThanThree();
+                }
+            }
+        }
+        if (rowCount == 5) {
+            if (nodeRepository.findAll().isEmpty()) {
+                insertFirstThreeNode();
+            }
+            if (nodeRepository.findAll().size() == 4) {
+                for (int i = 0; i < 5; i++) {
+                    incrementNodeIfCountMoreThanThree();
+                }
+            }
+        }
+        if (rowCount == 6) {
+            if (nodeRepository.findAll().isEmpty()) {
+                insertFirstThreeNode();
+            }
+            if (nodeRepository.findAll().size() == 4) {
+                for (int i = 0; i < 9; i++) {
+                    incrementNodeIfCountMoreThanThree();
+                }
+            }
+        }
+        if (rowCount == 7) {
+            if (nodeRepository.findAll().isEmpty()) {
+                insertFirstThreeNode();
+            }
+            if (nodeRepository.findAll().size() == 4) {
+                for (int i = 0; i < 14; i++) {
+                    incrementNodeIfCountMoreThanThree();
+                }
+            }
+        }
+        if (rowCount == 8) {
+            if (nodeRepository.findAll().isEmpty()) {
+                insertFirstThreeNode();
+            }
+            if (nodeRepository.findAll().size() == 4) {
+                for (int i = 0; i < 20; i++) {
+                    incrementNodeIfCountMoreThanThree();
+                }
+            }
+        }
+        if (rowCount == 9) {
+            if (nodeRepository.findAll().isEmpty()) {
+                insertFirstThreeNode();
+            }
+            if (nodeRepository.findAll().size() == 4) {
+                for (int i = 0; i < 27; i++) {
+                    incrementNodeIfCountMoreThanThree();
+                }
+            }
+        }
+    }
+
+    private void incrementNodeIfCountMoreThanThree() {
+        Node root = nodeRepository.findByNodeName("Root");
+        Node tempNode = new Node(UUID.randomUUID().toString(), String.valueOf(root.getId()), 1, null);
+        pairwiseService.addNode(tempNode);
+    }
+
+    private void insertFirstThreeNode() {
+        Node rootNode = new Node("Root", null, 100, null);
+        pairwiseService.addNode(rootNode);
+        Node nodeA = new Node("A", String.valueOf(rootNode.getId()), 1, null);
+        pairwiseService.addNode(nodeA);
+        Node nodeB = new Node("B", String.valueOf(rootNode.getId()), 1, null);
+        pairwiseService.addNode(nodeB);
+        Node nodeC = new Node("C", String.valueOf(rootNode.getId()), 1, null);
+        pairwiseService.addNode(nodeC);
     }
 }

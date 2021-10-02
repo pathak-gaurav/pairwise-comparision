@@ -3,12 +3,18 @@ package laurentian.pairwise.controller;
 import com.opencsv.CSVWriter;
 import laurentian.pairwise.repository.NodeRepository;
 import laurentian.pairwise.request.Node;
+import laurentian.pairwise.request.VirusScanningResponse;
+import laurentian.pairwise.rest.RestServiceClient;
 import laurentian.pairwise.service.PairwiseService;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,12 +51,14 @@ public class PairwiseController {
 
     private NodeRepository nodeRepository;
     private PairwiseService pairwiseService;
+    private RestServiceClient restServiceClient;
     private static double[][] array;
     private static double[][] finalResult;
 
-    public PairwiseController(NodeRepository nodeRepository, PairwiseService pairwiseService) {
+    public PairwiseController(NodeRepository nodeRepository, PairwiseService pairwiseService, RestServiceClient restServiceClient) {
         this.nodeRepository = nodeRepository;
         this.pairwiseService = pairwiseService;
+        this.restServiceClient = restServiceClient;
     }
 
     /**
@@ -161,7 +169,11 @@ public class PairwiseController {
 
     @GetMapping("/export")
     public ResponseEntity<ByteArrayResource> exportToCSV(HttpServletResponse response) throws IOException {
+        /** Since we want file in CSV so setting the response as text/csv
+         * */
         response.setContentType("text/csv");
+        /** This dateformat will be used to create a unique file name.
+         * */
         DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
         String currentDateTime = dateFormatter.format(new Date());
 
@@ -175,15 +187,23 @@ public class PairwiseController {
         header.add("Pragma", "no-cache");
         header.add("Expires", "0");
 
+        /** Creating new File Object with the above header value.
+         * */
         File file = new File(headerValue);
+        /** If file does not exist then create a new file
+         * */
         if (!file.isFile()) {
             file.createNewFile();
         }
 
+        /** Creating a new CSV write to write the data on File
+         * */
         CSVWriter csvWriter = new CSVWriter(new FileWriter(file));
 
         int rowCount = array.length;
 
+        /** Writing data into the file.
+         * */
         for (int i = 0; i < rowCount; i++) {
             int columnCount = array[i].length;
             String[] values = new String[columnCount];
@@ -192,9 +212,11 @@ public class PairwiseController {
             }
             csvWriter.writeNext(values);
         }
-
+        /** Flushing the data and closing the csvWriter.
+         * */
         csvWriter.flush();
         csvWriter.close();
+
         Path path = Paths.get(file.getAbsolutePath());
         ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
 
@@ -209,7 +231,6 @@ public class PairwiseController {
     @PostMapping("/upload")
     public ResponseEntity<Object> singleFileUpload(@RequestParam("file") MultipartFile file,
                                                    RedirectAttributes redirectAttributes) {
-
         String uploadsDir = "/uploads/";
         String realPathToUploads = Paths.get(".").normalize().toAbsolutePath().toFile().toString() + uploadsDir;
         if (!new File(realPathToUploads).exists()) {
@@ -221,6 +242,10 @@ public class PairwiseController {
 
         try {
             file.transferTo(dest);
+            VirusScanningResponse virusScanningResponse = virusScanning(dest.getAbsolutePath());
+            if(virusScanningResponse.getCleanResult()==false){
+                return new ResponseEntity<>("File cannot be processed as it contain VIRUS", HttpStatus.BAD_GATEWAY);
+            }
             FileInputStream fis = new FileInputStream(filePath);
             DataInputStream myInput = new DataInputStream(fis);
             String thisLine;
@@ -350,5 +375,28 @@ public class PairwiseController {
         pairwiseService.addNode(nodeB);
         Node nodeC = new Node("C", String.valueOf(rootNode.getId()), 1, null);
         pairwiseService.addNode(nodeC);
+    }
+
+    private VirusScanningResponse virusScanning(String absolutePath){
+        String apikey = "df2198a2-7291-4161-961b-31c679598052";
+        if(apiSelection() == 0){
+            apikey = "df2198a2-7291-4161-961b-31c679598052";
+        }else{
+            apikey = "b84e5517-ec04-4ad2-9d1c-0de32831e4a8";
+        }
+        String endpointUrl = "https://api.cloudmersive.com/virus/scan/file";
+        LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+        FileSystemResource fileSystemResource = new FileSystemResource(new File(absolutePath));
+        map.add("inputFile", fileSystemResource);
+        map.add("Apikey",apikey );
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.add("Apikey",apikey);
+        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, headers);
+        return restServiceClient.invokePaloAltoService(headers, HttpMethod.POST, null, VirusScanningResponse.class, endpointUrl, requestEntity);
+    }
+
+    public int apiSelection() {
+        return (int) Math.round(Math.random());
     }
 }

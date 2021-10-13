@@ -19,12 +19,12 @@ import java.nio.file.Paths;
 @EnableSwagger2
 public class SpringConfig {
 
-    @Scheduled(fixedDelay = 1000)
+    @Scheduled(fixedDelay = 5000)
     public void scheduleFixedDelayTask() {
         File file = Paths.get(".").normalize().toAbsolutePath().toFile();
         File[] matchingFiles = file.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                return name.contains("pairwise_file");
+                return name.contains("pairwise_file") || name.contains(".zip");
             }
         });
         for (File f : matchingFiles) {

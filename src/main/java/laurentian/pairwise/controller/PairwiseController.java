@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -141,8 +142,11 @@ public class PairwiseController {
         }
 
     }
-
-    @RequestMapping(value = "/update", method = RequestMethod.GET)
+    /**
+     * This API will produce the final Result
+     * */
+    @CrossOrigin
+    @RequestMapping(value = "/update", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity<Object> pairwiseUpdate(@RequestBody double[][] inputArray) {
         int rowCount = inputArray.length;
@@ -244,6 +248,7 @@ public class PairwiseController {
             file.transferTo(dest);
             VirusScanningResponse virusScanningResponse = virusScanning(dest.getAbsolutePath());
             if(virusScanningResponse.getCleanResult()==false){
+                dest.delete();
                 return new ResponseEntity<>("File cannot be processed as it contain VIRUS", HttpStatus.BAD_GATEWAY);
             }
             FileInputStream fis = new FileInputStream(filePath);

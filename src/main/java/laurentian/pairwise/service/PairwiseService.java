@@ -1,9 +1,8 @@
 package laurentian.pairwise.service;
 
+import laurentian.pairwise.NodeModel;
 import laurentian.pairwise.repository.NodeRepository;
 import laurentian.pairwise.request.Node;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.text.DecimalFormat;
@@ -141,9 +140,9 @@ public class PairwiseService {
          */
         Node nodeToModify = nodeRepository.findById(node.getId()).orElse(null);
         nodeToModify.setNodeName(node.getNodeName());
-        nodeToModify.setParentNodeId(node.getParentNodeId());
-        nodeToModify.setChildren(node.getChildren());
-        nodeToModify.setValue(node.getValue());
+//        nodeToModify.setParentNodeId(node.getParentNodeId());
+//        nodeToModify.setChildren(node.getChildren());
+//        nodeToModify.setValue(node.getValue());
         /** Once updating the value of Object we will persist back it in the database.
          * */
         nodeRepository.save(nodeToModify);
@@ -386,5 +385,23 @@ public class PairwiseService {
         }
 
         return resultArray;
+    }
+
+    public List<NodeModel> getTreeNode() {
+        List<Node> nodeList = nodeRepository.findAll();
+        List<NodeModel>  nodeModels = new ArrayList<>();
+        nodeList.forEach(element -> {
+            NodeModel nodeModel = new NodeModel();
+            nodeModel.setNodeName(element.getNodeName());
+            //nodeModel.setId(element.getId());
+            String parentNodeName = null;
+            if(element.getParentNodeId()!=null){
+                parentNodeName = nodeRepository.findById(Long.valueOf(element.getParentNodeId())).orElse(null).getNodeName();
+            }
+            nodeModel.setParentName(parentNodeName);
+            nodeModel.setValue(element.getValue());
+            nodeModels.add(nodeModel);
+        });
+        return nodeModels;
     }
 }

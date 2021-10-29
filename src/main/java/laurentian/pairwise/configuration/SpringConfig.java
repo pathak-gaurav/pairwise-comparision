@@ -4,6 +4,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.spi.DocumentationType;
@@ -17,7 +20,8 @@ import java.nio.file.Paths;
 @Configuration
 @EnableScheduling
 @EnableSwagger2
-public class SpringConfig {
+@EnableWebMvc
+public class SpringConfig implements WebMvcConfigurer {
 
     @Scheduled(fixedDelay = 5000)
     public void scheduleFixedDelayTask() {
@@ -42,6 +46,11 @@ public class SpringConfig {
                     .paths(PathSelectors.any())
                     .build();
         }
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**").allowedOrigins("http://localhost:4200");
     }
 
 }

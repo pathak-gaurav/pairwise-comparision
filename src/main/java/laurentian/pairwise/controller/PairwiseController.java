@@ -1,6 +1,7 @@
 package laurentian.pairwise.controller;
 
 import com.opencsv.CSVWriter;
+import laurentian.pairwise.NodeModel;
 import laurentian.pairwise.repository.NodeRepository;
 import laurentian.pairwise.request.Node;
 import laurentian.pairwise.request.VirusScanningResponse;
@@ -48,6 +49,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping(value = "${app.version.v1}")
+@CrossOrigin
 public class PairwiseController {
 
     private NodeRepository nodeRepository;
@@ -65,6 +67,7 @@ public class PairwiseController {
     /**
      * This is to create the root node and add the node to the existing node
      */
+    @CrossOrigin
     @RequestMapping(value = "/pairwise", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity<Object> pairwiseAddNode(@RequestBody Node node) {
@@ -93,6 +96,9 @@ public class PairwiseController {
     @RequestMapping(value = "/pairwise", method = RequestMethod.DELETE)
     public @ResponseBody
     ResponseEntity<Object> pairwiseDeleteNode(@RequestParam Long nodeId) {
+        if (nodeRepository.findById(nodeId).orElse(null).getNodeName().equalsIgnoreCase("Root")) {
+            return new ResponseEntity("Root Name cannot be deleted", HttpStatus.BAD_REQUEST);
+        }
         List<Node> allNodes = pairwiseService.deleteNode(nodeId);
         return new ResponseEntity<>(allNodes, HttpStatus.ACCEPTED);
     }
@@ -142,9 +148,10 @@ public class PairwiseController {
         }
 
     }
+
     /**
      * This API will produce the final Result
-     * */
+     */
     @CrossOrigin
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     public @ResponseBody
@@ -247,7 +254,7 @@ public class PairwiseController {
         try {
             file.transferTo(dest);
             VirusScanningResponse virusScanningResponse = virusScanning(dest.getAbsolutePath());
-            if(virusScanningResponse.getCleanResult()==false){
+            if (virusScanningResponse.getCleanResult() == false) {
                 dest.delete();
                 return new ResponseEntity<>("File cannot be processed as it contain VIRUS", HttpStatus.BAD_GATEWAY);
             }
@@ -382,26 +389,41 @@ public class PairwiseController {
         pairwiseService.addNode(nodeC);
     }
 
-    private VirusScanningResponse virusScanning(String absolutePath){
+    private VirusScanningResponse virusScanning(String absolutePath) {
         String apikey = "df2198a2-7291-4161-961b-31c679598052";
-        if(apiSelection() == 0){
+        if (apiSelection() == 0) {
             apikey = "df2198a2-7291-4161-961b-31c679598052";
-        }else{
+        } else {
             apikey = "b84e5517-ec04-4ad2-9d1c-0de32831e4a8";
         }
         String endpointUrl = "https://api.cloudmersive.com/virus/scan/file";
         LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
         FileSystemResource fileSystemResource = new FileSystemResource(new File(absolutePath));
         map.add("inputFile", fileSystemResource);
-        map.add("Apikey",apikey );
+        map.add("Apikey", apikey);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        headers.add("Apikey",apikey);
+        headers.add("Apikey", apikey);
         HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, headers);
         return restServiceClient.invokePaloAltoService(headers, HttpMethod.POST, null, VirusScanningResponse.class, endpointUrl, requestEntity);
     }
 
     public int apiSelection() {
         return (int) Math.round(Math.random());
+    }
+
+    @CrossOrigin
+    @RequestMapping(value = "/nodes", method = RequestMethod.GET,produces="application/json")
+    public @ResponseBody
+    List getAllNodes() {
+        List<Node> nodeList = nodeRepository.findAll();
+        return nodeList;
+    }
+
+    @CrossOrigin
+    @RequestMapping(value = "/tree", method = RequestMethod.GET,produces="application/json")
+    public @ResponseBody
+    List<NodeModel> getNodeForTree() {
+        return pairwiseService.getTreeNode();
     }
 }

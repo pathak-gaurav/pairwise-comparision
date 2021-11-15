@@ -1,4 +1,4 @@
-package laurentian.pairwise;
+package laurentian.pairwise.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

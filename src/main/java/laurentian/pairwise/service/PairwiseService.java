@@ -1,6 +1,6 @@
 package laurentian.pairwise.service;
 
-import laurentian.pairwise.NodeModel;
+import laurentian.pairwise.request.NodeModel;
 import laurentian.pairwise.repository.NodeRepository;
 import laurentian.pairwise.request.Node;
 import org.springframework.stereotype.Service;

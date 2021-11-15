@@ -1,7 +1,7 @@
 package laurentian.pairwise.controller;
 
 import com.opencsv.CSVWriter;
-import laurentian.pairwise.NodeModel;
+import laurentian.pairwise.request.NodeModel;
 import laurentian.pairwise.repository.NodeRepository;
 import laurentian.pairwise.request.Node;
 import laurentian.pairwise.request.VirusScanningResponse;
@@ -425,5 +425,31 @@ public class PairwiseController {
     public @ResponseBody
     List<NodeModel> getNodeForTree() {
         return pairwiseService.getTreeNode();
+    }
+
+    /**
+     * This will download the sample example for the user.
+     * */
+    @GetMapping("/example-download")
+    public ResponseEntity<ByteArrayResource> exampleDownload(HttpServletResponse response) throws IOException {
+        File file = Paths.get("example.csv").normalize().toAbsolutePath().toFile();
+
+        Path path = Paths.get(file.getAbsolutePath());
+        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
+
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename="+ file.getName();
+        response.setHeader(headerKey, headerValue);
+        HttpHeaders header = new HttpHeaders();
+        header.add(HttpHeaders.CONTENT_DISPOSITION, headerValue);
+        header.add("Cache-Control", "no-cache, no-store, must-revalidate");
+        header.add("Pragma", "no-cache");
+        header.add("Expires", "0");
+
+        return ResponseEntity.ok()
+                .headers(header)
+                .contentLength(file.length())
+                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .body(resource);
     }
 }

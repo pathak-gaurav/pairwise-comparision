@@ -259,7 +259,7 @@ public class PairwiseService {
                         // TODO
                         // TODO
 
-                        /** This update logic WORK to update the nodeValues but need to ask
+                        /** This update logic WORK to update the nodeValues in database but need to ask
                          * what will be the calculation for it. and which value to be considered from output.
                          *
                          * */
@@ -384,7 +384,7 @@ public class PairwiseService {
             }
         }
 
-        return resultArray;
+        return reconstructedGM;
     }
 
     public List<NodeModel> getTreeNode() {

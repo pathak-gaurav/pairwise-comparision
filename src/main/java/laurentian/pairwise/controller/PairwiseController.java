@@ -134,8 +134,12 @@ public class PairwiseController {
      */
     @RequestMapping(value = "/analyze", method = RequestMethod.GET)
     public @ResponseBody
-    ResponseEntity<Object> pairwiseAnalyze(@RequestBody Node node) {
+    ResponseEntity<Object> pairwiseAnalyze(@RequestParam Long nodeId) {
 
+        Node node = nodeRepository.findById(nodeId).orElse(null);
+        if(node == null){
+            return new ResponseEntity<>("Node does not exist", HttpStatus.BAD_REQUEST);
+        }
 
         /** A node must have atleast three direct children. Inheritance children are not allowed.
          * Thus we will throw an error if a node has less than 3 nodes.

@@ -1,40 +1,23 @@
 package laurentian.pairwise.controller;
 
 import com.opencsv.CSVWriter;
-import laurentian.pairwise.request.NodeModel;
 import laurentian.pairwise.repository.NodeRepository;
 import laurentian.pairwise.request.Node;
+import laurentian.pairwise.request.NodeModel;
 import laurentian.pairwise.request.VirusScanningResponse;
 import laurentian.pairwise.rest.RestServiceClient;
 import laurentian.pairwise.service.PairwiseService;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Files;
@@ -137,7 +120,7 @@ public class PairwiseController {
     ResponseEntity<Object> pairwiseAnalyze(@RequestParam Long nodeId) {
 
         Node node = nodeRepository.findById(nodeId).orElse(null);
-        if(node == null){
+        if (node == null) {
             return new ResponseEntity<>("Node does not exist", HttpStatus.BAD_REQUEST);
         }
 
@@ -417,7 +400,7 @@ public class PairwiseController {
     }
 
     @CrossOrigin
-    @RequestMapping(value = "/nodes", method = RequestMethod.GET,produces="application/json")
+    @RequestMapping(value = "/nodes", method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody
     List getAllNodes() {
         List<Node> nodeList = nodeRepository.findAll();
@@ -425,7 +408,7 @@ public class PairwiseController {
     }
 
     @CrossOrigin
-    @RequestMapping(value = "/tree", method = RequestMethod.GET,produces="application/json")
+    @RequestMapping(value = "/tree", method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody
     List<NodeModel> getNodeForTree() {
         return pairwiseService.getTreeNode();
@@ -433,7 +416,7 @@ public class PairwiseController {
 
     /**
      * This will download the sample example for the user.
-     * */
+     */
     @GetMapping("/example-download")
     public ResponseEntity<ByteArrayResource> exampleDownload(HttpServletResponse response) throws IOException {
         File file = Paths.get("example.csv").normalize().toAbsolutePath().toFile();
@@ -442,7 +425,7 @@ public class PairwiseController {
         ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
 
         String headerKey = "Content-Disposition";
-        String headerValue = "attachment; filename="+ file.getName();
+        String headerValue = "attachment; filename=" + file.getName();
         response.setHeader(headerKey, headerValue);
         HttpHeaders header = new HttpHeaders();
         header.add(HttpHeaders.CONTENT_DISPOSITION, headerValue);
@@ -455,5 +438,35 @@ public class PairwiseController {
                 .contentLength(file.length())
                 .contentType(MediaType.parseMediaType("application/octet-stream"))
                 .body(resource);
+    }
+
+    @CrossOrigin
+    @RequestMapping(value = "/triads", method = RequestMethod.POST)
+    public @ResponseBody
+    ResponseEntity<Object> triads(@RequestBody double[][] inputArray) {
+        int rowCount = inputArray.length;
+        int colCount = inputArray[0].length;
+
+        /** Since it has to be a square matrix if row and column count is not matched then we will throw an error.
+         * */
+        if (rowCount != colCount || rowCount < 3 || colCount < 3) {
+            return new ResponseEntity<>("Should be a square Matrix", HttpStatus.BAD_REQUEST);
+        }
+        List<Double> list = new ArrayList<>();
+        for (int i = 0; i < rowCount - 1; i++) {
+            for (int j = i + 1; j < rowCount; j++) {
+                double X = inputArray[i][j];
+                if (j < rowCount) {
+                    for (int k = j + 1; k < rowCount; k++) {
+                        double Z = inputArray[j][k];
+                        double Y = inputArray[i][k];
+
+                        double kii = round(round(1 - Math.min(round(Y / (X * Z), 4), round((X * Z) / Y, 4)), 4), 4);
+                        list.add(kii);
+                    }
+                }
+            }
+        }
+        return new ResponseEntity<>(list, HttpStatus.ACCEPTED);
     }
 }

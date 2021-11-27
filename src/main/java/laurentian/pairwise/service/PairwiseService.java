@@ -3,14 +3,13 @@ package laurentian.pairwise.service;
 import laurentian.pairwise.request.NodeModel;
 import laurentian.pairwise.repository.NodeRepository;
 import laurentian.pairwise.request.Node;
+import laurentian.pairwise.request.Triad;
 import org.springframework.stereotype.Service;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
+import static java.lang.Math.min;
 import static laurentian.pairwise.controller.PairwiseController.round;
 
 @Service
@@ -403,5 +402,137 @@ public class PairwiseService {
             nodeModels.add(nodeModel);
         });
         return nodeModels;
+    }
+
+    public ArrayList<Triad> getAllInconsistencyValues(double[][] inputArray, int rowCount) {
+        ArrayList<Triad> list = new ArrayList<>();
+        for (int i = 0; i < rowCount - 1; i++) {
+            for (int j = i + 1; j < rowCount; j++) {
+                double X = inputArray[i][j];
+                if (j < rowCount) {
+                    for (int k = j + 1; k < rowCount; k++) {
+                        double Z = inputArray[j][k];
+                        double Y = inputArray[i][k];
+
+                        double kii = Double.valueOf(1) - min(round(Y / (X * Z), 2), round((X * Z) / Y, 2));
+                        list.add(new Triad((double)i,(double)j,(double)k,X,Y,Z,kii));
+                    }
+                }
+            }
+        }
+        Collections.sort(list);
+        Collections.reverse(list);
+        return list;
+    }
+
+    public ArrayList<Triad> getTriads(double[][] inputArray) {
+        ArrayList<Triad> allInconsistencyValuesAndTriad = getAllInconsistencyValues(inputArray, inputArray.length);
+        while (allInconsistencyValuesAndTriad.get(0).getKii() > 0.333333) {
+            for (int i = 0; i < inputArray.length; i++) {
+                for (int k = i + 1; k < inputArray.length; k++) {
+                    for (int j = k + 1; j < inputArray.length; j++) {
+
+                        double a = inputArray[i][j];//obtain value from the matrix
+                        double b = inputArray[i][k];//obtain value from the matrix
+                        double c = inputArray[k][j];//obtain value from the matrix
+
+                        double temp = round(Float.valueOf(Math.round(Math.min(Math.abs(1 - a / (b * c)), Math.abs(1 - (b * c) / a)) * 100) / 100f).doubleValue(), 2);//calculate the inconsistency value and store in the inconsistency array
+                        if (allInconsistencyValuesAndTriad.get(0).getKii() == temp)//find the triple elements with the largest inconsistency
+                        {
+                            if ((b * c) < a) {
+                                double A = (b * c) / ((a + b + c) * (a + b + c));
+                                double B = (a + 2 * b * c) / (a + b + c);
+                                double C = b * c - a;
+                                double m = B * B - 4 * A * C;
+                                if (m < 0) {
+                                    break;
+                                } else {
+                                    double x1 = (-1 * B + Math.sqrt(m)) / (2 * A);
+                                    double x2 = (-1 * B - Math.sqrt(m)) / (2 * A);
+                                    if ((x1 > 0) && (x2 < 0)) {
+                                        b = (float) (b + (b * x1) / (a + b + c));
+                                        c = (float) (c + (c * x1) / (a + b + c));
+                                        a = (float) (a - (a * x1) / (a + b + c));
+                                    } else if ((x1 < 0) && (x2 > 0)) {
+                                        b = (float) (b + (b * x2) / (a + b + c));
+                                        c = (float) (c + (c * x2) / (a + b + c));
+                                        a = (float) (a - (a * x2) / (a + b + c));
+                                    } else if ((x1 > 0) && (x2 > 0)) {
+                                        double x = Math.min((float) x1, (float) x2);
+                                        b = (float) (b + (b * x) / (a + b + c));
+                                        c = (float) (c + (c * x) / (a + b + c));
+                                        a = (float) (a - (a * x) / (a + b + c));
+                                    } else if ((x1 < 0) && (x2 < 0)) {
+                                        break;
+                                    }
+                                }
+                            } else if ((b * c) > a) {
+                                double A = (b * c) / ((a + b + c) * (a + b + c));
+                                double B = -1 * (a + 2 * b * c) / (a + b + c);
+                                double C = b * c - a;
+                                double m = B * B - 4 * A * C;
+                                if (m < 0) {
+                                    break;
+                                } else {
+                                    double x1 = (-1 * B + Math.sqrt(m)) / (2 * A);
+                                    double x2 = (-1 * B - Math.sqrt(m)) / (2 * A);
+                                    if ((x1 > 0) && (x2 < 0)) {
+                                        b = (float) (b - (b * x1) / (a + b + c));
+                                        c = (float) (c - (c * x1) / (a + b + c));
+                                        a = (float) (a + (a * x1) / (a + b + c));
+                                    } else if ((x1 < 0) && (x2 > 0)) {
+                                        b = (float) (b - (b * x2) / (a + b + c));
+                                        c = (float) (c - (c * x2) / (a + b + c));
+                                        a = (float) (a + (a * x2) / (a + b + c));
+                                    } else if ((x1 > 0) && (x2 > 0)) {
+                                        double x = Math.min((float) x1, (float) x2);
+                                        b = (float) (b - (b * x) / (a + b + c));
+                                        c = (float) (c - (c * x) / (a + b + c));
+                                        a = (float) (a + (a * x) / (a + b + c));
+                                    } else if ((x1 < 0) && (x2 < 0)) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        inputArray[i][j] = a;
+                        inputArray[i][k] = b;
+                        inputArray[k][j] = c;
+                    }
+                }
+            }
+            allInconsistencyValuesAndTriad = getAllInconsistencyValues(inputArray, inputArray.length);
+        }
+        return allInconsistencyValuesAndTriad;
+    }
+
+    public ArrayList<Triad> reduceInconsistency2(double[][] inputArray) {
+        ArrayList<Triad> allInconsistencyValuesAndTriad = getAllInconsistencyValues(inputArray, inputArray.length);
+        long N = allInconsistencyValuesAndTriad.stream().filter(element -> element.getKii() > 0.333).count();
+        int i = 0, j = 0, k = 0;
+        double X = 0, Y = 0, Z = 0;
+
+        while (N != 0) {
+            i = Double.valueOf(allInconsistencyValuesAndTriad.get(0).getI()).intValue();
+            j = Double.valueOf(allInconsistencyValuesAndTriad.get(0).getJ()).intValue();
+            k = Double.valueOf(allInconsistencyValuesAndTriad.get(0).getK()).intValue();
+            X = allInconsistencyValuesAndTriad.get(0).getX();
+            Y = allInconsistencyValuesAndTriad.get(0).getY();
+            Z = allInconsistencyValuesAndTriad.get(0).getZ();
+
+            double new_x = (Math.pow(X, (double) 2 / 3) * Math.pow(Z, (double) -1 / 3) * Math.pow(Y, (double) 1 / 3));
+            double new_y = (Math.pow(X, (double) 1 / 3) * Math.pow(Z, (double) 1 / 3) * Math.pow(Y, (double) 2 / 3));
+            double new_z = (Math.pow(X, (double) -1 / 3) * Math.pow(Z, (double) 2 / 3) * Math.pow(Y, (double) 1 / 3));
+
+            inputArray[i][j] = round(new_x, 4);
+            inputArray[i][k] = round(new_y, 4);
+            inputArray[j][k] = round(new_z, 4);
+            inputArray[j][i] = round((double) 1 / new_x, 4);
+            inputArray[k][i] = round((double) 1 / new_y, 4);
+            inputArray[k][j] = round((double) 1 / new_z, 4);
+            allInconsistencyValuesAndTriad = getAllInconsistencyValues(inputArray, inputArray.length);
+            N = allInconsistencyValuesAndTriad.stream().filter(element -> element.getKii() > 0.333333).count();
+        }
+        return allInconsistencyValuesAndTriad;
     }
 }

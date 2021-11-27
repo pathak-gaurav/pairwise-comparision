@@ -4,6 +4,7 @@ import com.opencsv.CSVWriter;
 import laurentian.pairwise.repository.NodeRepository;
 import laurentian.pairwise.request.Node;
 import laurentian.pairwise.request.NodeModel;
+import laurentian.pairwise.request.Triad;
 import laurentian.pairwise.request.VirusScanningResponse;
 import laurentian.pairwise.rest.RestServiceClient;
 import laurentian.pairwise.service.PairwiseService;
@@ -25,10 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping(value = "${app.version.v1}")
@@ -441,9 +439,9 @@ public class PairwiseController {
     }
 
     @CrossOrigin
-    @RequestMapping(value = "/triads", method = RequestMethod.POST)
+    @RequestMapping(value = "/max-inconsistency", method = RequestMethod.POST)
     public @ResponseBody
-    ResponseEntity<Object> triads(@RequestBody double[][] inputArray) {
+    ResponseEntity<Object> maxInconsistency(@RequestBody double[][] inputArray) {
         int rowCount = inputArray.length;
         int colCount = inputArray[0].length;
 
@@ -452,21 +450,36 @@ public class PairwiseController {
         if (rowCount != colCount || rowCount < 3 || colCount < 3) {
             return new ResponseEntity<>("Should be a square Matrix", HttpStatus.BAD_REQUEST);
         }
-        List<Double> list = new ArrayList<>();
-        for (int i = 0; i < rowCount - 1; i++) {
-            for (int j = i + 1; j < rowCount; j++) {
-                double X = inputArray[i][j];
-                if (j < rowCount) {
-                    for (int k = j + 1; k < rowCount; k++) {
-                        double Z = inputArray[j][k];
-                        double Y = inputArray[i][k];
-
-                        double kii = round(round(1 - Math.min(round(Y / (X * Z), 4), round((X * Z) / Y, 4)), 4), 4);
-                        list.add(kii);
-                    }
-                }
-            }
-        }
-        return new ResponseEntity<>(list, HttpStatus.ACCEPTED);
+        ArrayList<Triad> allInconsistencyValuesAndTriad = pairwiseService.getAllInconsistencyValues(inputArray, rowCount);
+        return new ResponseEntity<>(allInconsistencyValuesAndTriad, HttpStatus.ACCEPTED);
     }
+
+
+    @CrossOrigin
+    @RequestMapping(value = "/reduce-inconsistency-2", method = RequestMethod.POST)
+    public @ResponseBody
+    ResponseEntity<Object> reduceInconsistency(@RequestBody double[][] inputArray) {
+
+        ArrayList<Triad> allInconsistencyValuesAndTriad = pairwiseService.reduceInconsistency2(inputArray);
+        return new ResponseEntity<>(allInconsistencyValuesAndTriad.get(0).getKii(), HttpStatus.ACCEPTED);
+    }
+
+
+
+    @CrossOrigin
+    @RequestMapping(value = "/reduce-inconsistency", method = RequestMethod.POST)
+    public @ResponseBody
+    ResponseEntity<Object> computeInconsistency(@RequestBody double[][] inputArray) {
+        int rowCount = inputArray.length;
+        int colCount = inputArray[0].length;
+        /** Since it has to be a square matrix if row and column count is not matched then we will throw an error.
+         * */
+        if (rowCount != colCount || rowCount < 3 || colCount < 3) {
+            return new ResponseEntity<>("Should be a square Matrix", HttpStatus.BAD_REQUEST);
+        }
+        ArrayList<Triad> allInconsistencyValuesAndTriad = pairwiseService.getTriads(inputArray);
+        return new ResponseEntity<>(allInconsistencyValuesAndTriad, HttpStatus.ACCEPTED);
+    }
+
+
 }

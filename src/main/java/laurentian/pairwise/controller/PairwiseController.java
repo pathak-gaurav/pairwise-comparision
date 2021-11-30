@@ -26,7 +26,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping(value = "${app.version.v1}")
@@ -91,6 +94,12 @@ public class PairwiseController {
          * So here we are checking based on primary key i.e. node.getId() whether the requestBody nodeName is same as in database
          * or the user is trying to change the name of the node i.e. nodeName().
          * */
+        if (nodeRepository.findById(node.getId()) == null || nodeRepository.findById(node.getId()).isEmpty()) {
+            return new ResponseEntity("Node Does Not Exist", HttpStatus.BAD_REQUEST);
+        }
+        if (nodeRepository.findById(node.getId()).orElse(null).getNodeName().equalsIgnoreCase("ROOT")) {
+            return new ResponseEntity("Root node name cannot be changed", HttpStatus.BAD_REQUEST);
+        }
         if (!node.getNodeName().equalsIgnoreCase(nodeRepository.findById(node.getId()).orElse(null).getNodeName())) {
             /** Here we are checking whether the new nodeName which user trying to change already exists in database or not.
              * If it exists in database i.e. a node with such nodeName already available in the DB then we are going to throw an error.
@@ -463,7 +472,6 @@ public class PairwiseController {
         ArrayList<Triad> allInconsistencyValuesAndTriad = pairwiseService.reduceInconsistency2(inputArray);
         return new ResponseEntity<>(allInconsistencyValuesAndTriad.get(0).getKii(), HttpStatus.ACCEPTED);
     }
-
 
 
     @CrossOrigin

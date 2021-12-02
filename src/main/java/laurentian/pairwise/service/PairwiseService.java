@@ -182,40 +182,43 @@ public class PairwiseService {
          * So rest two more input's we will create behind the scene and put a flag to showInTree as false.
          *  ShowInTree is yet to be implement as it will be a boolean field.
          * */
+
+        /** Below Code will be removed going forward
+         * */
         if (rowCount == 4) {
             for (int i = 0; i < 2; i++) {
                 Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
-                addNode(tempNode);
+                //addNode(tempNode);
             }
         }
         if (rowCount == 5) {
             for (int i = 0; i < 5; i++) {
                 Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
-                addNode(tempNode);
+               // addNode(tempNode);
             }
         }
         if (rowCount == 6) {
             for (int i = 0; i < 9; i++) {
                 Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
-                addNode(tempNode);
+                //addNode(tempNode);
             }
         }
         if (rowCount == 7) {
             for (int i = 0; i < 14; i++) {
                 Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
-                addNode(tempNode);
+                //addNode(tempNode);
             }
         }
         if (rowCount == 8) {
             for (int i = 0; i < 20; i++) {
                 Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
-                addNode(tempNode);
+                //addNode(tempNode);
             }
         }
         if (rowCount == 9) {
             for (int i = 0; i < 27; i++) {
                 Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
-                addNode(tempNode);
+                //addNode(tempNode);
             }
         }
         return arr;

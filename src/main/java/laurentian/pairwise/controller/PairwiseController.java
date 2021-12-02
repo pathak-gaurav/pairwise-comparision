@@ -12,6 +12,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -69,6 +70,8 @@ public class PairwiseController {
              * */
         } else if (nodeRepository.findByNodeName(node.getNodeName()) != null) {
             return new ResponseEntity("Node Name Already Exist", HttpStatus.BAD_REQUEST);
+        } else if (node.getNodeName().trim().length() == 0 || node.getNodeName().equalsIgnoreCase("NULL")) {
+            return new ResponseEntity("White Space / NULL is Not Allowed", HttpStatus.BAD_REQUEST);
         }
         List<Node> allNodes = pairwiseService.addNode(node);
         return new ResponseEntity<>(allNodes, HttpStatus.CREATED);
@@ -107,6 +110,9 @@ public class PairwiseController {
             if (nodeRepository.findByNodeName(node.getNodeName()) != null) {
                 return new ResponseEntity("Node Name Already Exist, Try Different", HttpStatus.BAD_REQUEST);
             }
+        }
+        if (node.getNodeName().trim().length() == 0 || node.getNodeName().equalsIgnoreCase("NULL")) {
+            return new ResponseEntity("White Space / NULL is Not Allowed", HttpStatus.BAD_REQUEST);
         }
         List<Node> allNodes = pairwiseService.modifyNode(node);
         return new ResponseEntity<>(allNodes, HttpStatus.ACCEPTED);

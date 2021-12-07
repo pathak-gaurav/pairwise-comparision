@@ -12,7 +12,6 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -155,7 +154,7 @@ public class PairwiseController {
     @CrossOrigin
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     public @ResponseBody
-    ResponseEntity<Object> pairwiseUpdate(@RequestBody double[][] inputArray) {
+    ResponseEntity<Object> pairwiseUpdate(@RequestBody double[][] inputArray, @RequestParam int num) {
         int rowCount = inputArray.length;
         int colCount = inputArray[0].length;
 
@@ -164,9 +163,13 @@ public class PairwiseController {
         if (rowCount != colCount || rowCount < 3 || colCount < 3) {
             return new ResponseEntity<>("Should be a square Matrix", HttpStatus.BAD_REQUEST);
         }
-
-        double[][] resultArray = pairwiseService.updateAfterFinalize(inputArray);
-        array = resultArray;
+        double[][] resultArray = new double[rowCount][colCount];
+        try {
+            resultArray = pairwiseService.updateAfterFinalize(inputArray, num);
+            array = resultArray;
+        } catch (NumberFormatException exception) {
+            return new ResponseEntity<>("Invalid Input, Please try Numbers", HttpStatus.BAD_REQUEST);
+        }
         return new ResponseEntity<>(resultArray, HttpStatus.ACCEPTED);
     }
 
@@ -289,7 +292,7 @@ public class PairwiseController {
 
             dest.delete();
             dest.deleteOnExit();
-            finalResult = pairwiseService.updateAfterFinalize(doubleArray);
+            finalResult = pairwiseService.updateAfterFinalize(doubleArray, 0);
             array = finalResult;
         } catch (IOException e) {
             e.printStackTrace();
@@ -307,69 +310,81 @@ public class PairwiseController {
 
     private void insertNodeFileUpload(int rowCount) {
 
-        if (rowCount == 3 && nodeRepository.findAll().isEmpty()) {
+        if (nodeRepository.findAll().isEmpty()) {
             insertFirstThreeNode();
-        }
-        if (rowCount == 4) {
-            if (nodeRepository.findAll().isEmpty()) {
-                insertFirstThreeNode();
-            }
-            if (nodeRepository.findAll().size() == 4) {
-                for (int i = 0; i < 2; i++) {
-                    incrementNodeIfCountMoreThanThree();
-                }
+            for (int i = 0; i < rowCount - (nodeRepository.findAll().size()-1); i++) {
+                incrementNodeIfCountMoreThanThree();
             }
         }
-        if (rowCount == 5) {
-            if (nodeRepository.findAll().isEmpty()) {
-                insertFirstThreeNode();
-            }
-            if (nodeRepository.findAll().size() == 4) {
-                for (int i = 0; i < 5; i++) {
-                    incrementNodeIfCountMoreThanThree();
-                }
-            }
-        }
-        if (rowCount == 6) {
-            if (nodeRepository.findAll().isEmpty()) {
-                insertFirstThreeNode();
-            }
-            if (nodeRepository.findAll().size() == 4) {
-                for (int i = 0; i < 9; i++) {
-                    incrementNodeIfCountMoreThanThree();
-                }
-            }
-        }
-        if (rowCount == 7) {
-            if (nodeRepository.findAll().isEmpty()) {
-                insertFirstThreeNode();
-            }
-            if (nodeRepository.findAll().size() == 4) {
-                for (int i = 0; i < 14; i++) {
-                    incrementNodeIfCountMoreThanThree();
-                }
-            }
-        }
-        if (rowCount == 8) {
-            if (nodeRepository.findAll().isEmpty()) {
-                insertFirstThreeNode();
-            }
-            if (nodeRepository.findAll().size() == 4) {
-                for (int i = 0; i < 20; i++) {
-                    incrementNodeIfCountMoreThanThree();
-                }
-            }
-        }
-        if (rowCount == 9) {
-            if (nodeRepository.findAll().isEmpty()) {
-                insertFirstThreeNode();
-            }
-            if (nodeRepository.findAll().size() == 4) {
-                for (int i = 0; i < 27; i++) {
-                    incrementNodeIfCountMoreThanThree();
-                }
-            }
-        }
+//        else{
+//            if(nodeRepository.findAll().isEmpty()){
+//                insertFirstThreeNode();
+//            }else{
+//                for (int i = 0; i < nodeRepository.findAll().size()-rowCount; i++) {
+//                    incrementNodeIfCountMoreThanThree();
+//                }
+//            }
+//        }
+//        if (rowCount == 4) {
+//            if (nodeRepository.findAll().isEmpty()) {
+//                insertFirstThreeNode();
+//            }
+//            if (nodeRepository.findAll().size() == 4) {
+//                for (int i = 0; i < 1; i++) {
+//                    incrementNodeIfCountMoreThanThree();
+//                }
+//            }
+//        }
+//        if (rowCount == 5) {
+//            if (nodeRepository.findAll().isEmpty()) {
+//                insertFirstThreeNode();
+//            }
+//            if (nodeRepository.findAll().size() == 4) {
+//                for (int i = 0; i < 2; i++) {
+//                    incrementNodeIfCountMoreThanThree();
+//                }
+//            }
+//        }
+//        if (rowCount == 6) {
+//            if (nodeRepository.findAll().isEmpty()) {
+//                insertFirstThreeNode();
+//            }
+//            if (nodeRepository.findAll().size() == 4) {
+//                for (int i = 0; i < 3; i++) {
+//                    incrementNodeIfCountMoreThanThree();
+//                }
+//            }
+//        }
+//        if (rowCount == 7) {
+//            if (nodeRepository.findAll().isEmpty()) {
+//                insertFirstThreeNode();
+//            }
+//            if (nodeRepository.findAll().size() == 4) {
+//                for (int i = 0; i < 4; i++) {
+//                    incrementNodeIfCountMoreThanThree();
+//                }
+//            }
+//        }
+//        if (rowCount == 8) {
+//            if (nodeRepository.findAll().isEmpty()) {
+//                insertFirstThreeNode();
+//            }
+//            if (nodeRepository.findAll().size() == 4) {
+//                for (int i = 0; i < 5; i++) {
+//                    incrementNodeIfCountMoreThanThree();
+//                }
+//            }
+//        }
+//        if (rowCount == 9) {
+//            if (nodeRepository.findAll().isEmpty()) {
+//                insertFirstThreeNode();
+//            }
+//            if (nodeRepository.findAll().size() == 4) {
+//                for (int i = 0; i < 6; i++) {
+//                    incrementNodeIfCountMoreThanThree();
+//                }
+//            }
+//        }
     }
 
     private void incrementNodeIfCountMoreThanThree() {
@@ -474,7 +489,6 @@ public class PairwiseController {
     @RequestMapping(value = "/reduce-inconsistency-2", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity<Object> reduceInconsistency(@RequestBody double[][] inputArray) {
-
         ArrayList<Triad> allInconsistencyValuesAndTriad = pairwiseService.reduceInconsistency2(inputArray);
         return new ResponseEntity<>(allInconsistencyValuesAndTriad.get(0).getKii(), HttpStatus.ACCEPTED);
     }
@@ -491,9 +505,23 @@ public class PairwiseController {
         if (rowCount != colCount || rowCount < 3 || colCount < 3) {
             return new ResponseEntity<>("Should be a square Matrix", HttpStatus.BAD_REQUEST);
         }
+        for (int row = 0; row < rowCount; row++) {
+            for (int col = 0; col < colCount; col++) {
+                if (row < col) {
+                    inputArray[row][col] = round(inputArray[row][col], 3);
+                }
+                if (row == col) {
+                    inputArray[row][col] = 1;
+                }
+                if (row > col) {
+                    inputArray[row][col] = 1;
+                }
+            }
+        }
         ArrayList<Triad> allInconsistencyValuesAndTriad = pairwiseService.getTriads(inputArray);
         return new ResponseEntity<>(allInconsistencyValuesAndTriad, HttpStatus.ACCEPTED);
     }
+
 
 
 }

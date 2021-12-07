@@ -1,8 +1,8 @@
 package laurentian.pairwise.service;
 
-import laurentian.pairwise.request.NodeModel;
 import laurentian.pairwise.repository.NodeRepository;
 import laurentian.pairwise.request.Node;
+import laurentian.pairwise.request.NodeModel;
 import laurentian.pairwise.request.Triad;
 import org.springframework.stereotype.Service;
 
@@ -122,7 +122,7 @@ public class PairwiseService {
             nodeRepository.delete(node);
             parentNode = nodeRepository.findById(Long.parseLong(node.getParentNodeId())).orElse(null);
             int parentNodeChildren = parentNode.getChildren().size();
-            double nodeValue = round((parentNode.getValue()/parentNodeChildren), 2);
+            double nodeValue = round((parentNode.getValue() / parentNodeChildren), 2);
             final double temp = nodeValue;
             /** Here we will be updating the existing child node value with the correct one as we have just
              * deleted one of the children.
@@ -194,7 +194,7 @@ public class PairwiseService {
         if (rowCount == 5) {
             for (int i = 0; i < 5; i++) {
                 Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
-               // addNode(tempNode);
+                // addNode(tempNode);
             }
         }
         if (rowCount == 6) {
@@ -224,7 +224,7 @@ public class PairwiseService {
         return arr;
     }
 
-    public double[][] updateAfterFinalize(double[][] inputArray) {
+    public double[][] updateAfterFinalize(double[][] inputArray, int numberPassed) {
 
 
         /**
@@ -395,19 +395,22 @@ public class PairwiseService {
                 differenceMatrix[row][col] = decimalFormatter.format(round((Math.pow(tempDoubleToHold, 2)), 6)); //round(Math.pow(tempDoubleToHold,2),5);
             }
         }
+        if (numberPassed == 0) {
+            return resultArray;
+        }
+            return reconstructedGM;
 
-        return reconstructedGM;
     }
 
     public List<NodeModel> getTreeNode() {
         List<Node> nodeList = nodeRepository.findAll();
-        List<NodeModel>  nodeModels = new ArrayList<>();
+        List<NodeModel> nodeModels = new ArrayList<>();
         nodeList.forEach(element -> {
             NodeModel nodeModel = new NodeModel();
             nodeModel.setNodeName(element.getNodeName());
             //nodeModel.setId(element.getId());
             String parentNodeName = null;
-            if(element.getParentNodeId()!=null){
+            if (element.getParentNodeId() != null) {
                 parentNodeName = nodeRepository.findById(Long.valueOf(element.getParentNodeId())).orElse(null).getNodeName();
             }
             nodeModel.setParentName(parentNodeName);
@@ -428,7 +431,7 @@ public class PairwiseService {
                         double Y = inputArray[i][k];
 
                         double kii = Double.valueOf(1) - min(round(Y / (X * Z), 2), round((X * Z) / Y, 2));
-                        list.add(new Triad((double)i,(double)j,(double)k,X,Y,Z,kii));
+                        list.add(new Triad((double) round(i,3), (double) round(j,3), (double) round(k,3), round(X,3), round(Y,3), round(Z,3), round(kii,5)));
                     }
                 }
             }

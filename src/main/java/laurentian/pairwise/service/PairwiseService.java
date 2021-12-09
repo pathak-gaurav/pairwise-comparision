@@ -122,12 +122,14 @@ public class PairwiseService {
             nodeRepository.delete(node);
             parentNode = nodeRepository.findById(Long.parseLong(node.getParentNodeId())).orElse(null);
             int parentNodeChildren = parentNode.getChildren().size();
-            double nodeValue = round((parentNode.getValue() / parentNodeChildren), 2);
-            final double temp = nodeValue;
-            /** Here we will be updating the existing child node value with the correct one as we have just
-             * deleted one of the children.
-             * */
-            parentNode.getChildren().forEach(element -> element.setValue(temp));
+           if(parentNodeChildren!=0) {
+               double nodeValue = round((parentNode.getValue() / parentNodeChildren), 2);
+               final double temp = nodeValue;
+               /** Here we will be updating the existing child node value with the correct one as we have just
+                * deleted one of the children.
+                * */
+               parentNode.getChildren().forEach(element -> element.setValue(temp));
+           }
             nodeRepository.save(parentNode);
         } else {
             /**

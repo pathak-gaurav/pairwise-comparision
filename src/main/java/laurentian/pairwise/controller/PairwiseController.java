@@ -40,6 +40,7 @@ public class PairwiseController {
     private UploadFlagRepository uploadFlagRepository;
     private static double[][] array;
     private static double[][] finalResult;
+    public static double inconsistencyTolerance = 0.33;
 
     public PairwiseController(NodeRepository nodeRepository, PairwiseService pairwiseService, RestServiceClient restServiceClient, UploadFlagRepository uploadFlagRepository) {
         this.nodeRepository = nodeRepository;
@@ -132,7 +133,7 @@ public class PairwiseController {
      */
     @RequestMapping(value = "/analyze", method = RequestMethod.GET)
     public @ResponseBody
-    ResponseEntity<Object> pairwiseAnalyze(@RequestParam Long nodeId) {
+    ResponseEntity<Object> pairwiseAnalyze(@RequestParam Long nodeId, @RequestParam Double tolerance) {
 
         Node node = nodeRepository.findById(nodeId).orElse(null);
         if (node == null) {
@@ -145,6 +146,9 @@ public class PairwiseController {
         if (node.getChildren().size() < 3) {
             return new ResponseEntity("Node must have at least 3 Child Node", HttpStatus.BAD_REQUEST);
         } else {
+            if(tolerance>0.1 && tolerance<=1){
+                inconsistencyTolerance = tolerance;
+            }
             double[][] analyzedArray = pairwiseService.analyze(node);
             return new ResponseEntity<>(analyzedArray, HttpStatus.ACCEPTED);
         }

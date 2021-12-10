@@ -1,5 +1,6 @@
 package laurentian.pairwise.service;
 
+import laurentian.pairwise.controller.PairwiseController;
 import laurentian.pairwise.repository.NodeRepository;
 import laurentian.pairwise.request.Node;
 import laurentian.pairwise.request.NodeModel;
@@ -445,7 +446,7 @@ public class PairwiseService {
 
     public ArrayList<Triad> getTriads(double[][] inputArray) {
         ArrayList<Triad> allInconsistencyValuesAndTriad = getAllInconsistencyValues(inputArray, inputArray.length);
-        while (allInconsistencyValuesAndTriad.get(0).getKii() > 0.333333) {
+        while (allInconsistencyValuesAndTriad.get(0).getKii() > PairwiseController.inconsistencyTolerance) {
             for (int i = 0; i < inputArray.length; i++) {
                 for (int k = i + 1; k < inputArray.length; k++) {
                     for (int j = k + 1; j < inputArray.length; j++) {
@@ -526,7 +527,7 @@ public class PairwiseService {
 
     public ArrayList<Triad> reduceInconsistency2(double[][] inputArray) {
         ArrayList<Triad> allInconsistencyValuesAndTriad = getAllInconsistencyValues(inputArray, inputArray.length);
-        long N = allInconsistencyValuesAndTriad.stream().filter(element -> element.getKii() > 0.333).count();
+        long N = allInconsistencyValuesAndTriad.stream().filter(element -> element.getKii() > PairwiseController.inconsistencyTolerance).count();
         int i = 0, j = 0, k = 0;
         double X = 0, Y = 0, Z = 0;
 

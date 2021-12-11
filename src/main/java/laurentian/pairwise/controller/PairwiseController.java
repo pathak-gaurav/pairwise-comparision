@@ -2,8 +2,10 @@ package laurentian.pairwise.controller;
 
 import com.opencsv.CSVWriter;
 import laurentian.pairwise.repository.NodeRepository;
-import laurentian.pairwise.repository.UploadFlagRepository;
-import laurentian.pairwise.request.*;
+import laurentian.pairwise.request.Node;
+import laurentian.pairwise.request.NodeModel;
+import laurentian.pairwise.request.Triad;
+import laurentian.pairwise.request.VirusScanningResponse;
 import laurentian.pairwise.rest.RestServiceClient;
 import laurentian.pairwise.service.PairwiseService;
 import org.springframework.core.io.ByteArrayResource;
@@ -37,16 +39,14 @@ public class PairwiseController {
     private NodeRepository nodeRepository;
     private PairwiseService pairwiseService;
     private RestServiceClient restServiceClient;
-    private UploadFlagRepository uploadFlagRepository;
     private static double[][] array;
     private static double[][] finalResult;
     public static double inconsistencyTolerance = 0.33;
 
-    public PairwiseController(NodeRepository nodeRepository, PairwiseService pairwiseService, RestServiceClient restServiceClient, UploadFlagRepository uploadFlagRepository) {
+    public PairwiseController(NodeRepository nodeRepository, PairwiseService pairwiseService, RestServiceClient restServiceClient) {
         this.nodeRepository = nodeRepository;
         this.pairwiseService = pairwiseService;
         this.restServiceClient = restServiceClient;
-        this.uploadFlagRepository = uploadFlagRepository;
     }
 
     /**
@@ -146,7 +146,7 @@ public class PairwiseController {
         if (node.getChildren().size() < 3) {
             return new ResponseEntity("Node must have at least 3 Child Node", HttpStatus.BAD_REQUEST);
         } else {
-            if(tolerance>0.1 && tolerance<=1){
+            if (tolerance > 0.1 && tolerance <= 1) {
                 inconsistencyTolerance = tolerance;
             }
             double[][] analyzedArray = pairwiseService.analyze(node);
@@ -299,6 +299,7 @@ public class PairwiseController {
 
             dest.delete();
             dest.deleteOnExit();
+            inconsistencyTolerance = 0.33;
             finalResult = pairwiseService.updateAfterFinalize(doubleArray, 0);
             array = finalResult;
         } catch (IOException e) {
@@ -323,75 +324,6 @@ public class PairwiseController {
                 incrementNodeIfCountMoreThanThree();
             }
         }
-//        else{
-//            if(nodeRepository.findAll().isEmpty()){
-//                insertFirstThreeNode();
-//            }else{
-//                for (int i = 0; i < nodeRepository.findAll().size()-rowCount; i++) {
-//                    incrementNodeIfCountMoreThanThree();
-//                }
-//            }
-//        }
-//        if (rowCount == 4) {
-//            if (nodeRepository.findAll().isEmpty()) {
-//                insertFirstThreeNode();
-//            }
-//            if (nodeRepository.findAll().size() == 4) {
-//                for (int i = 0; i < 1; i++) {
-//                    incrementNodeIfCountMoreThanThree();
-//                }
-//            }
-//        }
-//        if (rowCount == 5) {
-//            if (nodeRepository.findAll().isEmpty()) {
-//                insertFirstThreeNode();
-//            }
-//            if (nodeRepository.findAll().size() == 4) {
-//                for (int i = 0; i < 2; i++) {
-//                    incrementNodeIfCountMoreThanThree();
-//                }
-//            }
-//        }
-//        if (rowCount == 6) {
-//            if (nodeRepository.findAll().isEmpty()) {
-//                insertFirstThreeNode();
-//            }
-//            if (nodeRepository.findAll().size() == 4) {
-//                for (int i = 0; i < 3; i++) {
-//                    incrementNodeIfCountMoreThanThree();
-//                }
-//            }
-//        }
-//        if (rowCount == 7) {
-//            if (nodeRepository.findAll().isEmpty()) {
-//                insertFirstThreeNode();
-//            }
-//            if (nodeRepository.findAll().size() == 4) {
-//                for (int i = 0; i < 4; i++) {
-//                    incrementNodeIfCountMoreThanThree();
-//                }
-//            }
-//        }
-//        if (rowCount == 8) {
-//            if (nodeRepository.findAll().isEmpty()) {
-//                insertFirstThreeNode();
-//            }
-//            if (nodeRepository.findAll().size() == 4) {
-//                for (int i = 0; i < 5; i++) {
-//                    incrementNodeIfCountMoreThanThree();
-//                }
-//            }
-//        }
-//        if (rowCount == 9) {
-//            if (nodeRepository.findAll().isEmpty()) {
-//                insertFirstThreeNode();
-//            }
-//            if (nodeRepository.findAll().size() == 4) {
-//                for (int i = 0; i < 6; i++) {
-//                    incrementNodeIfCountMoreThanThree();
-//                }
-//            }
-//        }
     }
 
     private void incrementNodeIfCountMoreThanThree() {
@@ -525,37 +457,34 @@ public class PairwiseController {
                 }
             }
         }
-        if(rowCount>=5){
+        if (rowCount >= 5) {
             return reduceInconsistency(inputArray);
-        }else {
+        } else {
             ArrayList<Triad> allInconsistencyValuesAndTriad = pairwiseService.getTriads(inputArray);
             return new ResponseEntity<>(allInconsistencyValuesAndTriad, HttpStatus.ACCEPTED);
         }
     }
 
-
     @CrossOrigin
-    @RequestMapping(value = "/upload-flag", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/reset", method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody
-    ResponseEntity<Object> uploadFlagGet() {
-        UploadFlag uploadFlag = uploadFlagRepository.findAll().stream().findFirst().orElse(null);
-        return new ResponseEntity<>(uploadFlag.isFlag(), HttpStatus.ACCEPTED);
+    ResponseEntity<Object> reset() {
+        resetExceptRoot();
+        return new ResponseEntity<>("Success", HttpStatus.ACCEPTED);
     }
 
-    @CrossOrigin
-    @RequestMapping(value = "/upload-flag", method = RequestMethod.POST)
-    public @ResponseBody
-    ResponseEntity<Object> uploadFlagPost(@RequestBody boolean flag) {
-        UploadFlag uploadFlag = uploadFlagRepository.findAll().stream().findFirst().orElse(null);
-        uploadFlag.setFlag(flag);
-        uploadFlagRepository.save(uploadFlag);
-        return new ResponseEntity<>(uploadFlag.isFlag(), HttpStatus.ACCEPTED);
-    }
-
-    @CrossOrigin
-    @RequestMapping(value = "/upload-flag-array", method = RequestMethod.GET)
-    public @ResponseBody
-    ResponseEntity<Object> pairwiseUpdate() {
-        return new ResponseEntity<>(finalResult, HttpStatus.ACCEPTED);
+    @Transactional
+    public void resetExceptRoot() {
+        List<Node> repositoryAll = nodeRepository.findAll();
+        if (repositoryAll.size() > 0) {
+            for (Node node : repositoryAll) {
+                if (!node.getNodeName().equalsIgnoreCase("Root")) {
+                    Node parentNode = nodeRepository.findById(Long.parseLong(node.getParentNodeId())).orElse(null);
+                    parentNode.getChildren().remove(node);
+                    nodeRepository.delete(node);
+                    nodeRepository.save(parentNode);
+                }
+            }
+        }
     }
 }

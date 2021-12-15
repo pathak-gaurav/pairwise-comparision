@@ -457,7 +457,7 @@ public class PairwiseController {
                 }
             }
         }
-        if (rowCount >= 5) {
+        if (rowCount >= 4) {
             return reduceInconsistency(inputArray);
         } else {
             ArrayList<Triad> allInconsistencyValuesAndTriad = pairwiseService.getTriads(inputArray);

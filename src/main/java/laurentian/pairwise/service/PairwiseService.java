@@ -123,14 +123,14 @@ public class PairwiseService {
             nodeRepository.delete(node);
             parentNode = nodeRepository.findById(Long.parseLong(node.getParentNodeId())).orElse(null);
             int parentNodeChildren = parentNode.getChildren().size();
-           if(parentNodeChildren!=0) {
-               double nodeValue = round((parentNode.getValue() / parentNodeChildren), 2);
-               final double temp = nodeValue;
-               /** Here we will be updating the existing child node value with the correct one as we have just
-                * deleted one of the children.
-                * */
-               parentNode.getChildren().forEach(element -> element.setValue(temp));
-           }
+            if (parentNodeChildren != 0) {
+                double nodeValue = round((parentNode.getValue() / parentNodeChildren), 2);
+                final double temp = nodeValue;
+                /** Here we will be updating the existing child node value with the correct one as we have just
+                 * deleted one of the children.
+                 * */
+                parentNode.getChildren().forEach(element -> element.setValue(temp));
+            }
             nodeRepository.save(parentNode);
         } else {
             /**
@@ -401,8 +401,27 @@ public class PairwiseService {
         if (numberPassed == 0) {
             return resultArray;
         }
-            return reconstructedGM;
+        updateNodeToShowTreeMap(product, additionOfProductArray);
+        return reconstructedGM;
 
+    }
+
+    /**
+     * This Section of code will update the weight of TreeMap once the reduce inconsistency
+     * is calculated.
+     * */
+    private void updateNodeToShowTreeMap(double[] product, double additionOfProductArray) {
+        List<Node> repositoryAll = nodeRepository.findAll();
+        if (repositoryAll.size() > 0) {
+            for (int i = 0; i < repositoryAll.size(); i++) {
+                if (!repositoryAll.get(i).getNodeName().equalsIgnoreCase("Root")) {
+                    double tempWeight = round((int) Math.round(100 * product[i-1] / additionOfProductArray * 100) / 100f,2);
+                    Node node = repositoryAll.get(i);
+                    node.setValue(tempWeight);
+                    nodeRepository.save(node);
+                }
+            }
+        }
     }
 
     public List<NodeModel> getTreeNode() {
@@ -434,7 +453,7 @@ public class PairwiseService {
                         double Y = inputArray[i][k];
 
                         double kii = Double.valueOf(1) - min(round(Y / (X * Z), 2), round((X * Z) / Y, 2));
-                        list.add(new Triad((double) round(i,3), (double) round(j,3), (double) round(k,3), round(X,3), round(Y,3), round(Z,3), round(kii,5)));
+                        list.add(new Triad((double) round(i, 3), (double) round(j, 3), (double) round(k, 3), round(X, 3), round(Y, 3), round(Z, 3), round(kii, 5)));
                     }
                 }
             }

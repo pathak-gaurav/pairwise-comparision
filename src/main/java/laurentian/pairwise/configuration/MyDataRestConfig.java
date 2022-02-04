@@ -40,7 +40,11 @@ public class MyDataRestConfig implements RepositoryRestConfigurer {
         exposeIds(config);
 
         config.getCorsRegistry().addMapping("/**")
-                .allowedOrigins("*").allowedHeaders("*").allowedMethods("*");
+                .allowedOrigins("*").allowedHeaders("*").allowedMethods("*")
+                .maxAge(3600L)
+                .allowedHeaders("*")
+                .exposedHeaders("Authorization")
+                .allowCredentials(true);;
     }
 
     private void exposeIds(RepositoryRestConfiguration config) {

@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@Api(value="Pairwise Microservice", description="Operations pertaining to Node, File's and Virus Scan in Pairwise")
+@Api(value = "Pairwise Microservice", description = "Operations pertaining to Node, File's and Virus Scan in Pairwise")
 @RequestMapping(value = "${app.version.v1}")
 @CrossOrigin
 public class PairwiseController {
@@ -58,7 +58,7 @@ public class PairwiseController {
      * This is to create the root node and add the node to the existing node
      */
     @CrossOrigin
-    @ApiOperation(value = "API will Create the Node",response = ResponseEntity.class)
+    @ApiOperation(value = "API will Create the Node", response = ResponseEntity.class)
     @ApiResponses(value = {
             @ApiResponse(code = 202, message = "Request Accepted and response Sent"),
             @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
@@ -95,7 +95,7 @@ public class PairwiseController {
      * This is to delete the node and it's children
      */
     @CrossOrigin
-    @ApiOperation(value = "API will Delete the Node",response = ResponseEntity.class)
+    @ApiOperation(value = "API will Delete the Node", response = ResponseEntity.class)
     @ApiResponses(value = {
             @ApiResponse(code = 202, message = "Request Accepted and response Sent"),
             @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
@@ -118,7 +118,7 @@ public class PairwiseController {
     }
 
     @CrossOrigin
-    @ApiOperation(value = "API will Change the Node Name",response = ResponseEntity.class)
+    @ApiOperation(value = "API will Change the Node Name", response = ResponseEntity.class)
     @ApiResponses(value = {
             @ApiResponse(code = 202, message = "Request Accepted and response Sent"),
             @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
@@ -166,7 +166,7 @@ public class PairwiseController {
      * If input size is 26 then it will be 9** matrix ( 9 * 4 )
      */
     @CrossOrigin
-    @ApiOperation(value = "API will produce matrix with value of 1",response = ResponseEntity.class)
+    @ApiOperation(value = "API will produce matrix with value of 1", response = ResponseEntity.class)
     @ApiResponses(value = {
             @ApiResponse(code = 202, message = "Request Accepted and response Sent"),
             @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
@@ -203,7 +203,7 @@ public class PairwiseController {
      * This API will produce the final Result
      */
     @CrossOrigin
-    @ApiOperation(value = "API will produce the final Inconsistent Matrix",response = ResponseEntity.class)
+    @ApiOperation(value = "API will produce the final Inconsistent Matrix", response = ResponseEntity.class)
     @ApiResponses(value = {
             @ApiResponse(code = 202, message = "Request Accepted and response Sent"),
             @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
@@ -241,7 +241,8 @@ public class PairwiseController {
         return bd.doubleValue();
     }
 
-    @ApiOperation(value = "Download the final Pairwise Matrix Result",response = ResponseEntity.class)
+    @CrossOrigin
+    @ApiOperation(value = "Download the final Pairwise Matrix Result", response = ResponseEntity.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "CSV file sent Successfully"),
             @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
@@ -311,7 +312,8 @@ public class PairwiseController {
                 .body(resource);
     }
 
-    @ApiOperation(value = "File Upload and Virus Scan Functionality",response = ResponseEntity.class)
+    @CrossOrigin
+    @ApiOperation(value = "File Upload and Virus Scan Functionality", response = ResponseEntity.class)
     @ApiResponses(value = {
             @ApiResponse(code = 202, message = "File Upload is Successful"),
             @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
@@ -430,7 +432,8 @@ public class PairwiseController {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         headers.add("Apikey", apikey);
         HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, headers);
-        return restServiceClient.invokePaloAltoService(headers, HttpMethod.POST, null, VirusScanningResponse.class, endpointUrl, requestEntity);
+        return restServiceClient.invokePaloAltoService(headers, HttpMethod.POST, null, VirusScanningResponse.class,
+                endpointUrl, requestEntity);
     }
 
     public int apiSelection() {
@@ -455,7 +458,8 @@ public class PairwiseController {
     /**
      * This will download the sample example for the user.
      */
-    @ApiOperation(value = "Will download the sample example for the user",response = ResponseEntity.class)
+    @CrossOrigin
+    @ApiOperation(value = "Will download the sample example for the user", response = ResponseEntity.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Request accepted and sample file sent to frontend"),
             @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
@@ -488,7 +492,7 @@ public class PairwiseController {
     }
 
     @CrossOrigin
-    @ApiOperation(value = "Finding all the Max Inconsistency greater than Tolerance",response = ResponseEntity.class)
+    @ApiOperation(value = "Finding all the Max Inconsistency greater than Tolerance", response = ResponseEntity.class)
     @ApiResponses(value = {
             @ApiResponse(code = 202, message = "Request accepted and processed by the Server"),
             @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
@@ -523,7 +527,7 @@ public class PairwiseController {
 
 
     @CrossOrigin
-    @ApiOperation(value = "Reduce the inconsistency of the Pairwise Matrix",response = ResponseEntity.class)
+    @ApiOperation(value = "Reduce the inconsistency of the Pairwise Matrix", response = ResponseEntity.class)
     @ApiResponses(value = {
             @ApiResponse(code = 202, message = "Request accepted and processed by the Server"),
             @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
@@ -564,7 +568,7 @@ public class PairwiseController {
     }
 
     @CrossOrigin
-    @ApiOperation(value = "Reset the whole Pairwise application",response = ResponseEntity.class)
+    @ApiOperation(value = "Reset the whole Pairwise application", response = ResponseEntity.class)
     @ApiResponses(value = {
             @ApiResponse(code = 202, message = "Request accepted and processed by the Server"),
             @ApiResponse(code = 401, message = "You are not authorized to view the resource"),

@@ -38,7 +38,7 @@ import java.util.UUID;
 @RestController
 @Api(value = "Pairwise Microservice", description = "Operations pertaining to Node, File's and Virus Scan in Pairwise")
 @RequestMapping(value = "${app.version.v1}")
-@CrossOrigin
+@CrossOrigin(origins = "https://pairwise-ui.web.app/")
 public class PairwiseController {
 
     private NodeRepository nodeRepository;

@@ -40,7 +40,7 @@ public class MyDataRestConfig implements RepositoryRestConfigurer {
         exposeIds(config);
 
         config.getCorsRegistry().addMapping("/**")
-                .allowedOrigins("https://pairwise-ui.web.app/");
+                .allowedOrigins("*").allowedHeaders("*").allowedMethods("*");
     }
 
     private void exposeIds(RepositoryRestConfiguration config) {

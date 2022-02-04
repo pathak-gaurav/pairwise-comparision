@@ -38,6 +38,9 @@ public class MyDataRestConfig implements RepositoryRestConfigurer {
 
         // call an internal helper method
         exposeIds(config);
+
+        config.getCorsRegistry().addMapping("/**")
+                .allowedOrigins("https://pairwise-ui.web.app/");
     }
 
     private void exposeIds(RepositoryRestConfiguration config) {

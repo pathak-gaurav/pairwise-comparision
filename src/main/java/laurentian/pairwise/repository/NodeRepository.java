@@ -7,6 +7,9 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
+/**
+ * This is JPA repo, has all the important method to fetch, save and delete from the database.
+ * */
 @Repository
 @CrossOrigin
 @RepositoryRestResource(collectionResourceRel = "node", path = "nodes")

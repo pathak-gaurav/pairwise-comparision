@@ -7,19 +7,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
-import springfox.documentation.service.Contact;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.nio.file.Paths;
-
-import static springfox.documentation.builders.PathSelectors.regex;
 
 @Configuration
 @EnableScheduling
@@ -27,12 +22,16 @@ import static springfox.documentation.builders.PathSelectors.regex;
 @EnableWebMvc
 public class SpringConfig implements WebMvcConfigurer {
 
+    /**
+     * We cannot keep the files on the server once it was uploaded by the user, there should be a way to delete the file.
+     * This scheduler will detect the file which is a csv and delete it from the server. This scheduler runs in every 5 seconds
+     * */
     @Scheduled(fixedDelay = 5000)
     public void scheduleFixedDelayTask() {
         File file = Paths.get(".").normalize().toAbsolutePath().toFile();
         File[] matchingFiles = file.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                return name.contains("pairwise_file") || name.contains(".zip");
+                return name.contains("pairwise_file") || name.contains(".csv");
             }
         });
         for (File f : matchingFiles) {
@@ -40,18 +39,11 @@ public class SpringConfig implements WebMvcConfigurer {
         }
     }
 
-//    @Configuration
-//    public class SpringFoxConfig {
-//        @Bean
-//        public Docket api() {
-//            return new Docket(DocumentationType.SWAGGER_2)
-//                    .select()
-//                    .apis(RequestHandlerSelectors.any())
-//                    .paths(PathSelectors.any())
-//                    .build();
-//        }
-//    }
 
+    /**
+     * Swagger Standard Configuration, Choosing Controller folder to show in dashboard as this folder.
+     * Only contains the API.
+     * */
     @Bean
     public Docket productApi() {
         return new Docket(DocumentationType.SWAGGER_2)

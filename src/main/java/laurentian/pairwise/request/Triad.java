@@ -5,6 +5,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
+/**
+ * This class will hold the triad, A list will be created of Triad so for a PC matrix list of all
+ * Triad can be stored.
+ * */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

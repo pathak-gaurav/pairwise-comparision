@@ -180,50 +180,9 @@ public class PairwiseService {
         /** We will save result in double dimension array.
          * */
         double[][] result = new double[rowCount][colCount];
-        /** If we have four input then it means we have to create a 4*4 matrix.
-         * So total of 6 values are required in upper triangle but we have only 4 value as in input.
-         * So rest two more input's we will create behind the scene and put a flag to showInTree as false.
-         *  ShowInTree is yet to be implement as it will be a boolean field.
+        /** If we have four input then it means we have to create a 4*4 matrix. Similarly will work with other inputs
+         * too.
          * */
-
-        /** Below Code will be removed going forward
-         * */
-        if (rowCount == 4) {
-            for (int i = 0; i < 2; i++) {
-                Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
-                //addNode(tempNode);
-            }
-        }
-        if (rowCount == 5) {
-            for (int i = 0; i < 5; i++) {
-                Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
-                // addNode(tempNode);
-            }
-        }
-        if (rowCount == 6) {
-            for (int i = 0; i < 9; i++) {
-                Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
-                //addNode(tempNode);
-            }
-        }
-        if (rowCount == 7) {
-            for (int i = 0; i < 14; i++) {
-                Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
-                //addNode(tempNode);
-            }
-        }
-        if (rowCount == 8) {
-            for (int i = 0; i < 20; i++) {
-                Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
-                //addNode(tempNode);
-            }
-        }
-        if (rowCount == 9) {
-            for (int i = 0; i < 27; i++) {
-                Node tempNode = new Node(UUID.randomUUID().toString(), "1", 1, null);
-                //addNode(tempNode);
-            }
-        }
         return arr;
     }
 
@@ -265,26 +224,6 @@ public class PairwiseService {
                          * */
                     } else if (row < col) {
                         resultArray[row][col] = round(inputArray[row][col], 3);
-
-
-                        // TODO
-                        // TODO
-                        // TODO
-                        // TODO
-                        // TODO
-                        // TODO
-
-                        /** This update logic WORK to update the nodeValues in database but need to ask
-                         * what will be the calculation for it. and which value to be considered from output.
-                         *
-                         * */
-//                        final int rowFinal = row;
-//                        final int colFinal = col;
-//                        Node node = nodeRepository.findById(nodeLoopCounter).get();
-//                        node.setValue(round(inputArray[row][col], 3));
-//                        nodeRepository.save(node);
-//                        nodeLoopCounter++;
-
 
                         /** Here we update the lower triangular matrix.
                          * */
@@ -386,7 +325,7 @@ public class PairwiseService {
             }
         }
 
-        /** Excel output is Different than System output need to check whether Subtraction of Matrix is done properly
+        /** Subtraction of Matrix
          * */
         String differenceMatrix[][] = new String[rowCount][colCount];
         for (int row = 0; row < rowCount; row++) {
@@ -409,13 +348,13 @@ public class PairwiseService {
     /**
      * This Section of code will update the weight of TreeMap once the reduce inconsistency
      * is calculated.
-     * */
+     */
     private void updateNodeToShowTreeMap(double[] product, double additionOfProductArray) {
         List<Node> repositoryAll = nodeRepository.findAll();
         if (repositoryAll.size() > 0) {
             for (int i = 0; i < repositoryAll.size(); i++) {
                 if (!repositoryAll.get(i).getNodeName().equalsIgnoreCase("Root")) {
-                    double tempWeight = round((int) Math.round(100 * product[i-1] / additionOfProductArray * 100) / 100f,2);
+                    double tempWeight = round((int) Math.round(100 * product[i - 1] / additionOfProductArray * 100) / 100f, 2);
                     Node node = repositoryAll.get(i);
                     node.setValue(tempWeight);
                     nodeRepository.save(node);
@@ -424,6 +363,9 @@ public class PairwiseService {
         }
     }
 
+    /**
+     * This will provide the list of tree node to show in the UI
+     * */
     public List<NodeModel> getTreeNode() {
         List<Node> nodeList = nodeRepository.findAll();
         List<NodeModel> nodeModels = new ArrayList<>();
@@ -442,6 +384,9 @@ public class PairwiseService {
         return nodeModels;
     }
 
+    /**
+     * This method will calculate all the inconsistency of the upper triangle matrix.
+     * */
     public ArrayList<Triad> getAllInconsistencyValues(double[][] inputArray, int rowCount) {
         ArrayList<Triad> list = new ArrayList<>();
         for (int i = 0; i < rowCount - 1; i++) {
@@ -451,8 +396,8 @@ public class PairwiseService {
                     for (int k = j + 1; k < rowCount; k++) {
                         double Z = inputArray[j][k];
                         double Y = inputArray[i][k];
-
                         double kii = Double.valueOf(1) - min(round(Y / (X * Z), 2), round((X * Z) / Y, 2));
+                        System.out.println("Triad and Kii: " + inputArray[i][j] + " " + inputArray[i][k] + " " + inputArray[j][k] + " " + round(kii, 3));
                         list.add(new Triad((double) round(i, 3), (double) round(j, 3), (double) round(k, 3), round(X, 3), round(Y, 3), round(Z, 3), round(kii, 5)));
                     }
                 }
@@ -473,7 +418,7 @@ public class PairwiseService {
                         double a = inputArray[i][j];//obtain value from the matrix
                         double b = inputArray[i][k];//obtain value from the matrix
                         double c = inputArray[k][j];//obtain value from the matrix
-
+                        System.out.println("Value for triad: " + a + " " + b + " " + c);
                         double temp = round(Float.valueOf(Math.round(Math.min(Math.abs(1 - a / (b * c)), Math.abs(1 - (b * c) / a)) * 100) / 100f).doubleValue(), 2);//calculate the inconsistency value and store in the inconsistency array
                         if (allInconsistencyValuesAndTriad.get(0).getKii() == temp)//find the triple elements with the largest inconsistency
                         {
@@ -549,7 +494,7 @@ public class PairwiseService {
         long N = allInconsistencyValuesAndTriad.stream().filter(element -> element.getKii() > PairwiseController.inconsistencyTolerance).count();
         int i = 0, j = 0, k = 0;
         double X = 0, Y = 0, Z = 0;
-
+        int iteration = 0;
         while (N != 0) {
             i = Double.valueOf(allInconsistencyValuesAndTriad.get(0).getI()).intValue();
             j = Double.valueOf(allInconsistencyValuesAndTriad.get(0).getJ()).intValue();
@@ -568,7 +513,10 @@ public class PairwiseService {
             inputArray[j][i] = round((double) 1 / new_x, 4);
             inputArray[k][i] = round((double) 1 / new_y, 4);
             inputArray[k][j] = round((double) 1 / new_z, 4);
+            iteration = iteration + 1;
+            System.out.println("Iteration==> " + iteration);
             allInconsistencyValuesAndTriad = getAllInconsistencyValues(inputArray, inputArray.length);
+            System.out.println("Total Triads==> " + allInconsistencyValuesAndTriad.stream().filter(element -> element.getKii() >= 0).count());
             N = allInconsistencyValuesAndTriad.stream().filter(element -> element.getKii() > 0.333333).count();
         }
         return allInconsistencyValuesAndTriad;

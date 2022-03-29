@@ -14,6 +14,10 @@ public class Loader implements CommandLineRunner {
         this.nodeRepository = nodeRepository;
     }
 
+    /**
+     * Post construct of application, it will create a default node of ROOT. User always starts with a
+     * default node to add on to.
+     * */
     @Override
     public void run(String... args) throws Exception {
         Node rootNode = new Node();

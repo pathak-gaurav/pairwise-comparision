@@ -165,6 +165,11 @@ public class PairwiseController {
      * If input size is 28 then it will be 8*8 matrix (8 half is 4 so 8*4 - 4)
      * If input size is 26 then it will be 9** matrix ( 9 * 4 )
      */
+    /**
+     * Once you add all the nodes in the application, then the reduce inconsistency button will be used to create the matrix
+     * with all values of 1.
+     * */
+
     @CrossOrigin
     @ApiOperation(value = "API will produce matrix with value of 1", response = ResponseEntity.class)
     @ApiResponses(value = {
@@ -200,7 +205,11 @@ public class PairwiseController {
     }
 
     /**
-     * This API will produce the final Result
+     * This API will take the input matrix which means it will accept only upper triangle values from UI.
+     * Based on each value update from upper triangle matrix simultaneously it will update the lower triangle matrix.
+     * If the passed number is 0 it means it will update each value in upper and lower triangle.
+     *
+     * Once all the value updated a final matrix with the answer is created when the value is passed as 1
      */
     @CrossOrigin
     @ApiOperation(value = "API will produce the final Inconsistent Matrix", response = ResponseEntity.class)
@@ -583,6 +592,10 @@ public class PairwiseController {
         return new ResponseEntity<>("Success", HttpStatus.ACCEPTED);
     }
 
+    /**
+     * This method will reset the Matrix and delete all the entries from the database. It is a
+     * It is transaction thus needs to be committed once changes are done, thus @Transactional annotation is used.
+     * */
     @Transactional
     public void resetExceptRoot() {
         List<Node> repositoryAll = nodeRepository.findAll();

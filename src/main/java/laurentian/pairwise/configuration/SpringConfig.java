@@ -31,7 +31,7 @@ public class SpringConfig implements WebMvcConfigurer {
         File file = Paths.get(".").normalize().toAbsolutePath().toFile();
         File[] matchingFiles = file.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                return name.contains("pairwise_file") || name.contains(".csv");
+                return name.contains(".csv") && !name.contains("example");
             }
         });
         for (File f : matchingFiles) {

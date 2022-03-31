@@ -7,8 +7,13 @@ import laurentian.pairwise.request.NodeModel;
 import laurentian.pairwise.request.Triad;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Stream;
 
 import static java.lang.Math.min;
 import static laurentian.pairwise.controller.PairwiseController.round;
@@ -349,18 +354,35 @@ public class PairwiseService {
      * This Section of code will update the weight of TreeMap once the reduce inconsistency
      * is calculated.
      */
+    @Transactional
     private void updateNodeToShowTreeMap(double[] product, double additionOfProductArray) {
         List<Node> repositoryAll = nodeRepository.findAll();
         if (repositoryAll.size() > 0) {
-            for (int i = 0; i < repositoryAll.size(); i++) {
+            for (int i = 0; i < product.length+1; i++) {
                 if (!repositoryAll.get(i).getNodeName().equalsIgnoreCase("Root")) {
                     double tempWeight = round((int) Math.round(100 * product[i - 1] / additionOfProductArray * 100) / 100f, 2);
                     Node node = repositoryAll.get(i);
                     node.setValue(tempWeight);
                     nodeRepository.save(node);
+
+
                 }
             }
         }
+        List<Node> nodeRepoChildUpdate = nodeRepository.findAll();
+        nodeRepoChildUpdate.forEach(eachNode -> {
+            if(eachNode.getParentNodeId()!= null && !nodeRepository.findById(Long.parseLong(eachNode.getParentNodeId())).orElse(null).getNodeName().equalsIgnoreCase("Root")){
+                Node parentNode = nodeRepository.findById(Long.parseLong(eachNode.getParentNodeId())).orElse(null);
+                int nodeChildren = parentNode.getChildren().size();
+                double nodeValue = parentNode.getValue();
+                if (nodeChildren >= 1) {
+                    nodeValue = round(nodeValue / (nodeChildren), 2);
+                    final double temp = nodeValue;
+                    parentNode.getChildren().forEach(element -> element.setValue(temp));
+                    nodeRepository.save(parentNode);
+                }
+            }
+        });
     }
 
     /**

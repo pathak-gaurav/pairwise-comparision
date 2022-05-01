@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import static java.lang.Math.min;
 import static laurentian.pairwise.controller.PairwiseController.round;
@@ -26,7 +26,13 @@ public class PairwiseService {
     public PairwiseService(NodeRepository nodeRepository) {
         this.nodeRepository = nodeRepository;
     }
+    private static Long nodeIdAnalyze;
 
+    /***
+     * This method will add the node in the database.
+     * @param node : It takes the node as input from the API and that node input is passed to Service addNode method.
+     * @return: It returns List of all nodes which is already added to the database.
+     */
     public List<Node> addNode(Node node) {
         /**
          * If the request body of node does not have any parentNodeId which means parentNodeId is null
@@ -101,9 +107,17 @@ public class PairwiseService {
              * */
             nodeRepository.save(nodeToAdd);
         }
+        /***
+         * Returning all the nodes after adding the nodes, since we want to see the updated TreeMap
+         */
         return nodeRepository.findAll();
     }
 
+    /***
+     * This method will delete the node from the DB using the ID, here id is the primary Key.
+     * @param nodeId : It is the id of the node which we want to delete.
+     * @return It returns List of all nodes which is already in the database.
+     */
     public List<Node> deleteNode(Long nodeId) {
         /**
          * Checking whether the node with the nodeId exist in the database that mean checking whether it is not null.
@@ -126,7 +140,12 @@ public class PairwiseService {
             /** Now we can delete the node itself as it now de-associated from it's parent. So it will get deleted from database.
              * */
             nodeRepository.delete(node);
+            /***
+             * Finding the node parent id, so that we can update the value in DB and in the Tree.
+             */
             parentNode = nodeRepository.findById(Long.parseLong(node.getParentNodeId())).orElse(null);
+            /** After deleting the child node we will check how many node does the parent has left.
+             * */
             int parentNodeChildren = parentNode.getChildren().size();
             if (parentNodeChildren != 0) {
                 double nodeValue = round((parentNode.getValue() / parentNodeChildren), 2);
@@ -136,38 +155,54 @@ public class PairwiseService {
                  * */
                 parentNode.getChildren().forEach(element -> element.setValue(temp));
             }
+            /***
+             * Saving the parent node will update it's children value too, as JPA provide Transactional Feature.
+             */
             nodeRepository.save(parentNode);
         } else {
             /**
-             * When nodeName is ROOT the we will delete it directly. Also notice we are not checking whether nodeName is ROOT because in previous
-             * if condition we checked whether nodeName is "NOT ROOT"
+             * Notice we are not checking whether nodeName is ROOT because in controller we checked whether nodeName is "NOT ROOT"
              * All association will be removed when we delete it so no need to worry about it's ArrayList as we want it's children to also gets deleted.
              * */
             Node node = nodeRepository.findById(nodeId).orElse(null);
             nodeRepository.delete(node);
 
         }
+        /***
+         * Returning all the nodes after deleting the nodes, since we want to see the updated TreeMap
+         */
         return nodeRepository.findAll();
     }
 
+    /***
+     * This method will change the name of the existing Node which is present in the DB.
+     * @param node : It takes the Node as input from the API and that node input is passed to Service modifyNode method.
+     * @return: It returns List of all nodes which is already in the database.
+     */
     public List<Node> modifyNode(Node node) {
 
-        /** Reteriving node based on nodeId which was available in RequestBody.
+        /** Retrieving node based on nodeId which was available in RequestBody.
          * Once we have the Object from database we will update the object values using setter's.
          */
         Node nodeToModify = nodeRepository.findById(node.getId()).orElse(null);
         nodeToModify.setNodeName(node.getNodeName());
-//        nodeToModify.setParentNodeId(node.getParentNodeId());
-//        nodeToModify.setChildren(node.getChildren());
-//        nodeToModify.setValue(node.getValue());
         /** Once updating the value of Object we will persist back it in the database.
          * */
         nodeRepository.save(nodeToModify);
+        /***
+         * Returning all the nodes after modifying the nodes, since we want to see the updated TreeMap.
+         */
         return nodeRepository.findAll();
     }
 
-    public double[][] analyze(Node node) {
-
+    /***
+     *  This method will create a matrix of n*n based on the number of Children of the Node.
+     * @param node : Node is the Object which can have any number of Children, minimum number of Children is required to be 3
+     * @param nodeId
+     * @return It will return a double dimension array with all the entries with value of 1
+     */
+    public double[][] analyze(Node node, Long nodeId) {
+        nodeIdAnalyze = nodeId;
         /**
          * if there are 3 children then it will be 3*3 matrix, when 4 children then we will have 4*4 matrix
          * Since it is a square matrix so we will set rowcount equal to column count.
@@ -185,12 +220,20 @@ public class PairwiseService {
         /** We will save result in double dimension array.
          * */
         double[][] result = new double[rowCount][colCount];
-        /** If we have four input then it means we have to create a 4*4 matrix. Similarly will work with other inputs
+        /** If we have four input then it means we have to create a 4*4 matrix. Similarly, will work with other inputs
          * too.
          * */
         return arr;
     }
 
+    /***
+     *
+     * @param inputArray : This is the double dimension matrix which is passed from UI
+     * @param numberPassed : This is the flag, which Determines whether to calculate PC Matrix Result or to Update the value of
+     *                     Lower Triangle of Matrix.
+     * @return It will return the updated PC Matrix (It can be PC Matrix Final Result OR It can be matrix with the updated value
+     *              based on the "numberPassed" parameter)
+     */
     public double[][] updateAfterFinalize(double[][] inputArray, int numberPassed) {
 
 
@@ -345,49 +388,108 @@ public class PairwiseService {
         if (numberPassed == 0) {
             return resultArray;
         }
-        updateNodeToShowTreeMap(product, additionOfProductArray);
+        updateNodeToShowTreeMap(product, additionOfProductArray,nodeIdAnalyze);
         return reconstructedGM;
-
     }
 
     /**
-     * This Section of code will update the weight of TreeMap once the reduce inconsistency
-     * is calculated.
+     * This Section of code will update the weight of TreeMap once reduce inconsistency is calculated.
+     * @param product : This is the product of the PC matrix passed from the previous method.
+     * @param additionOfProductArray : This is the addition of the ProductArray Matrix.
+     * @param nodeIdAnalyze: Node id to update specific level on TreeMap
      */
     @Transactional
-    private void updateNodeToShowTreeMap(double[] product, double additionOfProductArray) {
+    private void updateNodeToShowTreeMap(double[] product, double additionOfProductArray, Long nodeIdAnalyze) {
+        /** Fetching all the nodes from the database table.
+         * */
         List<Node> repositoryAll = nodeRepository.findAll();
-        if (repositoryAll.size() > 0) {
-            for (int i = 0; i < product.length+1; i++) {
-                if (!repositoryAll.get(i).getNodeName().equalsIgnoreCase("Root")) {
-                    double tempWeight = round((int) Math.round(100 * product[i - 1] / additionOfProductArray * 100) / 100f, 2);
-                    Node node = repositoryAll.get(i);
-                    node.setValue(tempWeight);
-                    nodeRepository.save(node);
+        Node tempNode = null;
+        if(nodeIdAnalyze != null){
+            tempNode =  nodeRepository.findById(nodeIdAnalyze).orElse(null);
+        }
+
+        /***
+         * Checking whether the total size or children is greater than 0
+         */
+        if(tempNode==null || tempNode.getNodeName().equalsIgnoreCase("ROOT")){
+            if (repositoryAll.size() > 0) {
+                for (int i = 0; i < product.length+1; i++) {
+                    /***
+                     * Checking whether the node is not a ROOT node, as ROOT node value is never going to Change.
+                     */
+                    if (!repositoryAll.get(i).getNodeName().equalsIgnoreCase("Root")) {
+                        /***
+                         * Updating the Child of the ROOT node, with the value calculated below.
+                         */
+                        double tempWeight = round((int) Math.round(100 * product[i - 1] / additionOfProductArray * 100) / 100f, 2);
+                        Node node = repositoryAll.get(i);
+                        node.setValue(tempWeight);
+                        nodeRepository.save(node);
 
 
+                    }
                 }
+            }
+            /***
+             * Here we are updating the Node's whose immediate parent are not ROOT, so in simple terms we are updating the child of Child
+             * ROOT->CHILD->"CHILD".
+             */
+            List<Node> nodeRepoChildUpdate = nodeRepository.findAll();
+            nodeRepoChildUpdate.forEach(eachNode -> {
+                /***
+                 * Filtering only those Nodes whose Parents are not 'ROOT'
+                 */
+                if(eachNode.getParentNodeId()!= null && !nodeRepository.findById(Long.parseLong(eachNode.getParentNodeId())).orElse(null).getNodeName().equalsIgnoreCase("Root")){
+                    /***
+                     * Once we have the node whose parent are not ROOT, then we will get filtered node parent, and it's value
+                     * to update the child in below steps.
+                     */
+                    Node parentNode = nodeRepository.findById(Long.parseLong(eachNode.getParentNodeId())).orElse(null);
+                    /***
+                     * Checking the size of filtered node Parent
+                     */
+                    int nodeChildren = parentNode.getChildren().size();
+                    /***
+                     * Getting the value of filtered node Parent
+                     */
+                    double nodeValue = parentNode.getValue();
+                    if (nodeChildren >= 1) {
+                        /***
+                         * Calculating the new weight of Child and updating back to the DB.
+                         */
+                        nodeValue = round(nodeValue / (nodeChildren), 2);
+                        final double temp = nodeValue;
+                        parentNode.getChildren().forEach(element -> element.setValue(temp));
+                        nodeRepository.save(parentNode);
+                    }
+                }
+            });
+        }else{
+            Node nodeAnalyze = tempNode;
+            List<Node> tempNodeNodeAnalyze = repositoryAll.stream()
+                    .filter(element -> element.getParentNodeId()!=null && Double.parseDouble(element.getParentNodeId()) == nodeAnalyze.getId())
+                    .collect(Collectors.toList());
+            for (int i = 0; i < product.length; i++) {
+
+                /***
+                 * Updating the Child of the ROOT node, with the value calculated below.
+                 */
+                double tempWeight = round((int) Math.round(nodeAnalyze.getValue() * product[i] / additionOfProductArray * nodeAnalyze.getValue()) / nodeAnalyze.getValue(), 2);
+                Node node = nodeRepository.findById(tempNodeNodeAnalyze.get(i).getId()).orElse(null);
+                node.setValue(tempWeight);
+                nodeRepository.save(node);
+
             }
         }
-        List<Node> nodeRepoChildUpdate = nodeRepository.findAll();
-        nodeRepoChildUpdate.forEach(eachNode -> {
-            if(eachNode.getParentNodeId()!= null && !nodeRepository.findById(Long.parseLong(eachNode.getParentNodeId())).orElse(null).getNodeName().equalsIgnoreCase("Root")){
-                Node parentNode = nodeRepository.findById(Long.parseLong(eachNode.getParentNodeId())).orElse(null);
-                int nodeChildren = parentNode.getChildren().size();
-                double nodeValue = parentNode.getValue();
-                if (nodeChildren >= 1) {
-                    nodeValue = round(nodeValue / (nodeChildren), 2);
-                    final double temp = nodeValue;
-                    parentNode.getChildren().forEach(element -> element.setValue(temp));
-                    nodeRepository.save(parentNode);
-                }
-            }
-        });
+
     }
 
     /**
      * This will provide the list of tree node to show in the UI
      * */
+    /***
+     * @return It will return the List of Node to shown in the Tree.
+     */
     public List<NodeModel> getTreeNode() {
         List<Node> nodeList = nodeRepository.findAll();
         List<NodeModel> nodeModels = new ArrayList<>();
@@ -411,22 +513,56 @@ public class PairwiseService {
      * */
     public ArrayList<Triad> getAllInconsistencyValues(double[][] inputArray, int rowCount) {
         ArrayList<Triad> list = new ArrayList<>();
+        /***
+         * As per the Inconsistency Calculation formula i<j and j<k
+         */
         for (int i = 0; i < rowCount - 1; i++) {
+            /***
+             *  j is greater than i thus we have j+1 as start Index
+             */
             for (int j = i + 1; j < rowCount; j++) {
+                /***
+                 *  We set the value of 1st element when i<j
+                 */
                 double X = inputArray[i][j];
+                /***
+                 * Checking whether j is still less than the rowcount of Matrix
+                 */
                 if (j < rowCount) {
+                    /***
+                     * k is greater than j thus we have k+1 as the start Index
+                     */
                     for (int k = j + 1; k < rowCount; k++) {
+                        /***
+                         * We will set the value of 2nd and 3rd Element when i<j and j<k all condition satisfy
+                         */
                         double Z = inputArray[j][k];
                         double Y = inputArray[i][k];
+                        /***
+                         * Once we have Triad values, i.e, X, Y , Z then using these value we will calculate the Kii value
+                         * based on Formula.
+                         * NOTE: This kii is never saved on to database
+                         */
                         double kii = Double.valueOf(1) - min(round(Y / (X * Z), 2), round((X * Z) / Y, 2));
                         System.out.println("Triad and Kii: " + inputArray[i][j] + " " + inputArray[i][k] + " " + inputArray[j][k] + " " + round(kii, 3));
+                        /***
+                         * After calculation, we will save the Triad & it's Index into a List to show in UI as a Table.
+                         */
                         list.add(new Triad((double) round(i, 3), (double) round(j, 3), (double) round(k, 3), round(X, 3), round(Y, 3), round(Z, 3), round(kii, 5)));
                     }
                 }
             }
         }
+        /***
+         * Sorting the list based on ascending order.
+         */
         Collections.sort(list);
+        /** Reversing the list after Sorting thus, highest Kii value will be first onto the list.
+         * */
         Collections.reverse(list);
+        /***
+         * Returning the List to UI to show into the table as well as in the Chart and in BellCurve.
+         */
         return list;
     }
 
@@ -511,6 +647,11 @@ public class PairwiseService {
         return allInconsistencyValuesAndTriad;
     }
 
+    /***
+     *
+     * @param inputArray : This is the double dimension array which already has the updated upper and lower triangle of PC Matrix
+     * @return: It will return the reduce Inconsistency to the UI, which will be showcased in the PIECHART and BELLCURVE.
+     */
     public ArrayList<Triad> reduceInconsistency2(double[][] inputArray) {
         ArrayList<Triad> allInconsistencyValuesAndTriad = getAllInconsistencyValues(inputArray, inputArray.length);
         long N = allInconsistencyValuesAndTriad.stream().filter(element -> element.getKii() > PairwiseController.inconsistencyTolerance).count();
@@ -518,27 +659,54 @@ public class PairwiseService {
         double X = 0, Y = 0, Z = 0;
         int iteration = 0;
         while (N != 0) {
+            /***
+             * The value i, j,k are the index of the triad, As stated in the thesis i<j<k
+             */
             i = Double.valueOf(allInconsistencyValuesAndTriad.get(0).getI()).intValue();
             j = Double.valueOf(allInconsistencyValuesAndTriad.get(0).getJ()).intValue();
             k = Double.valueOf(allInconsistencyValuesAndTriad.get(0).getK()).intValue();
+            /***
+             * X,Y,Z are the triads actual value
+             */
             X = allInconsistencyValuesAndTriad.get(0).getX();
             Y = allInconsistencyValuesAndTriad.get(0).getY();
             Z = allInconsistencyValuesAndTriad.get(0).getZ();
-
+            /***
+             * Reducing the inconsistency of the triad with the Formula
+             */
             double new_x = (Math.pow(X, (double) 2 / 3) * Math.pow(Z, (double) -1 / 3) * Math.pow(Y, (double) 1 / 3));
             double new_y = (Math.pow(X, (double) 1 / 3) * Math.pow(Z, (double) 1 / 3) * Math.pow(Y, (double) 2 / 3));
             double new_z = (Math.pow(X, (double) -1 / 3) * Math.pow(Z, (double) 2 / 3) * Math.pow(Y, (double) 1 / 3));
 
+            /***
+             * Updating the Triad value with the new values calculated in the previous step.
+             */
             inputArray[i][j] = round(new_x, 4);
             inputArray[i][k] = round(new_y, 4);
             inputArray[j][k] = round(new_z, 4);
+            /***
+             * Calculating the Lower Triangle Value, since we got the upper triangle value in previous step.
+             */
             inputArray[j][i] = round((double) 1 / new_x, 4);
             inputArray[k][i] = round((double) 1 / new_y, 4);
             inputArray[k][j] = round((double) 1 / new_z, 4);
+            /***
+             * This iteration variable is only used for Logging Purpose, to check how many iteration does the formula
+             * requires to reduce the inconsistency.
+             */
             iteration = iteration + 1;
             System.out.println("Iteration==> " + iteration);
+            /***
+             * After updating the Matrix with the new value we will again going to calculate the Kii values
+             * of the Triad, if the Kii is still greater than the Threshold, the 'N' will not become ZERO and the
+             * while loop will continue its execution.
+             */
             allInconsistencyValuesAndTriad = getAllInconsistencyValues(inputArray, inputArray.length);
             System.out.println("Total Triads==> " + allInconsistencyValuesAndTriad.stream().filter(element -> element.getKii() >= 0).count());
+            /**
+             * Checking whether any Kii value is still larger than 0.33(Threshold), if 'YES' then N will not be zero and while
+             * Loop will continue.
+             * */
             N = allInconsistencyValuesAndTriad.stream().filter(element -> element.getKii() > 0.333333).count();
         }
         return allInconsistencyValuesAndTriad;

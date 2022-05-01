@@ -35,19 +35,39 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+/***
+ * The class contains all the API, which will be used by frontend.
+ */
 @RestController
 @Api(value = "Pairwise Microservice", description = "Operations pertaining to Node, File's and Virus Scan in Pairwise")
 @RequestMapping(value = "${app.version.v1}")
 @CrossOrigin(origins = "*")
 public class PairwiseController {
 
+    /***
+     * Field for Object creation
+     */
     private NodeRepository nodeRepository;
     private PairwiseService pairwiseService;
     private RestServiceClient restServiceClient;
+
+    /***
+     * Static Fields to hold the result
+     */
     private static double[][] array;
     private static double[][] finalResult;
+
+    /**
+     * Default Inconsistency
+     * */
     public static double inconsistencyTolerance = 0.33;
 
+    /***
+     *
+     * @param nodeRepository : Repository Contains the methods to perform certain operation on database.
+     * @param pairwiseService : Service contains the Business Logic
+     * @param restServiceClient : It's a Rest Client implementation to call File Scanning / Virus Scanning External API's
+     */
     public PairwiseController(NodeRepository nodeRepository, PairwiseService pairwiseService, RestServiceClient restServiceClient) {
         this.nodeRepository = nodeRepository;
         this.pairwiseService = pairwiseService;
@@ -67,6 +87,11 @@ public class PairwiseController {
             @ApiResponse(code = 400, message = "File cannot be processed as it contain VIRUS")
     }
     )
+    /***
+     * This API will add node in a TreeMap
+     * @param: Node is the class/Entity to hold TreeMap data.
+     * @Return: ResponseEntity represents the whole HTTP response with the status Code of the Request
+     */
     @RequestMapping(value = "/pairwise", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity<Object> pairwiseAddNode(@RequestBody Node node) {
@@ -84,10 +109,17 @@ public class PairwiseController {
              * */
         } else if (nodeRepository.findByNodeName(node.getNodeName()) != null) {
             return new ResponseEntity("Node Name Already Exist", HttpStatus.BAD_REQUEST);
+            /***
+             * Checking whether node name is passed as NULL or a String is passed with empty spaces.
+             */
         } else if (node.getNodeName().trim().length() == 0 || node.getNodeName().equalsIgnoreCase("NULL")) {
             return new ResponseEntity("White Space / NULL is Not Allowed", HttpStatus.BAD_REQUEST);
         }
+        //Calling the Business Logic in Service to AddNode.
         List<Node> allNodes = pairwiseService.addNode(node);
+        /***
+         * Returning the response back to UI after adding the node.
+         */
         return new ResponseEntity<>(allNodes, HttpStatus.CREATED);
     }
 
@@ -198,7 +230,7 @@ public class PairwiseController {
             if (tolerance > 0.1 && tolerance <= 1) {
                 inconsistencyTolerance = tolerance;
             }
-            double[][] analyzedArray = pairwiseService.analyze(node);
+            double[][] analyzedArray = pairwiseService.analyze(node, nodeId);
             return new ResponseEntity<>(analyzedArray, HttpStatus.ACCEPTED);
         }
 

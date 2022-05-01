@@ -59,7 +59,7 @@ public class PairwiseController {
 
     /**
      * Default Inconsistency
-     * */
+     */
     public static double inconsistencyTolerance = 0.33;
 
     /***
@@ -79,14 +79,7 @@ public class PairwiseController {
      */
     @CrossOrigin
     @ApiOperation(value = "API will Create the Node", response = ResponseEntity.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = 202, message = "Request Accepted and response Sent"),
-            @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
-            @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
-            @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"),
-            @ApiResponse(code = 400, message = "File cannot be processed as it contain VIRUS")
-    }
-    )
+    @ApiResponses(value = {@ApiResponse(code = 202, message = "Request Accepted and response Sent"), @ApiResponse(code = 401, message = "You are not authorized to view the resource"), @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"), @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"), @ApiResponse(code = 400, message = "File cannot be processed as it contain VIRUS")})
     /***
      * This API will add node in a TreeMap
      * @param: Node is the class/Entity to hold TreeMap data.
@@ -128,14 +121,7 @@ public class PairwiseController {
      */
     @CrossOrigin
     @ApiOperation(value = "API will Delete the Node", response = ResponseEntity.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = 202, message = "Request Accepted and response Sent"),
-            @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
-            @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
-            @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"),
-            @ApiResponse(code = 400, message = "File cannot be processed as it contain VIRUS")
-    }
-    )
+    @ApiResponses(value = {@ApiResponse(code = 202, message = "Request Accepted and response Sent"), @ApiResponse(code = 401, message = "You are not authorized to view the resource"), @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"), @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"), @ApiResponse(code = 400, message = "File cannot be processed as it contain VIRUS")})
     @RequestMapping(value = "/pairwise", method = RequestMethod.DELETE)
     public @ResponseBody
     ResponseEntity<Object> pairwiseDeleteNode(@RequestParam Long nodeId) {
@@ -151,14 +137,7 @@ public class PairwiseController {
 
     @CrossOrigin
     @ApiOperation(value = "API will Change the Node Name", response = ResponseEntity.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = 202, message = "Request Accepted and response Sent"),
-            @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
-            @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
-            @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"),
-            @ApiResponse(code = 400, message = "File cannot be processed as it contain VIRUS")
-    }
-    )
+    @ApiResponses(value = {@ApiResponse(code = 202, message = "Request Accepted and response Sent"), @ApiResponse(code = 401, message = "You are not authorized to view the resource"), @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"), @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"), @ApiResponse(code = 400, message = "File cannot be processed as it contain VIRUS")})
     @RequestMapping(value = "/pairwise", method = RequestMethod.PUT)
     public @ResponseBody
     ResponseEntity<Object> pairwiseModifyNode(@RequestBody Node node) {
@@ -200,18 +179,11 @@ public class PairwiseController {
     /**
      * Once you add all the nodes in the application, then the reduce inconsistency button will be used to create the matrix
      * with all values of 1.
-     * */
+     */
 
     @CrossOrigin
     @ApiOperation(value = "API will produce matrix with value of 1", response = ResponseEntity.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = 202, message = "Request Accepted and response Sent"),
-            @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
-            @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
-            @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"),
-            @ApiResponse(code = 400, message = "File cannot be processed as it contain VIRUS")
-    }
-    )
+    @ApiResponses(value = {@ApiResponse(code = 202, message = "Request Accepted and response Sent"), @ApiResponse(code = 401, message = "You are not authorized to view the resource"), @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"), @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"), @ApiResponse(code = 400, message = "File cannot be processed as it contain VIRUS")})
     @RequestMapping(value = "/analyze", method = RequestMethod.GET)
     public @ResponseBody
     ResponseEntity<Object> pairwiseAnalyze(@RequestParam Long nodeId, @RequestParam Double tolerance) {
@@ -240,19 +212,12 @@ public class PairwiseController {
      * This API will take the input matrix which means it will accept only upper triangle values from UI.
      * Based on each value update from upper triangle matrix simultaneously it will update the lower triangle matrix.
      * If the passed number is 0 it means it will update each value in upper and lower triangle.
-     *
+     * <p>
      * Once all the value updated a final matrix with the answer is created when the value is passed as 1
      */
     @CrossOrigin
     @ApiOperation(value = "API will produce the final Inconsistent Matrix", response = ResponseEntity.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = 202, message = "Request Accepted and response Sent"),
-            @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
-            @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
-            @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"),
-            @ApiResponse(code = 400, message = "File cannot be processed as it contain VIRUS")
-    }
-    )
+    @ApiResponses(value = {@ApiResponse(code = 202, message = "Request Accepted and response Sent"), @ApiResponse(code = 401, message = "You are not authorized to view the resource"), @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"), @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"), @ApiResponse(code = 400, message = "File cannot be processed as it contain VIRUS")})
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity<Object> pairwiseUpdate(@RequestBody double[][] inputArray, @RequestParam int num) {
@@ -284,14 +249,7 @@ public class PairwiseController {
 
     @CrossOrigin
     @ApiOperation(value = "Download the final Pairwise Matrix Result", response = ResponseEntity.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "CSV file sent Successfully"),
-            @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
-            @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
-            @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"),
-            @ApiResponse(code = 400, message = "File cannot be processed as it contain VIRUS")
-    }
-    )
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "CSV file sent Successfully"), @ApiResponse(code = 401, message = "You are not authorized to view the resource"), @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"), @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"), @ApiResponse(code = 400, message = "File cannot be processed as it contain VIRUS")})
     @GetMapping("/export")
     public ResponseEntity<ByteArrayResource> exportToCSV(HttpServletResponse response) throws IOException {
         /** Since we want file in CSV so setting the response as text/csv
@@ -355,17 +313,9 @@ public class PairwiseController {
 
     @CrossOrigin
     @ApiOperation(value = "File Upload and Virus Scan Functionality", response = ResponseEntity.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = 202, message = "File Upload is Successful"),
-            @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
-            @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
-            @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"),
-            @ApiResponse(code = 400, message = "File cannot be processed as it contain VIRUS")
-    }
-    )
+    @ApiResponses(value = {@ApiResponse(code = 202, message = "File Upload is Successful"), @ApiResponse(code = 401, message = "You are not authorized to view the resource"), @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"), @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"), @ApiResponse(code = 400, message = "File cannot be processed as it contain VIRUS")})
     @PostMapping("/upload")
-    public ResponseEntity<Object> singleFileUpload(@RequestParam("file") MultipartFile file,
-                                                   RedirectAttributes redirectAttributes) {
+    public ResponseEntity<Object> singleFileUpload(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
         String uploadsDir = "/uploads/";
         String realPathToUploads = Paths.get(".").normalize().toAbsolutePath().toFile().toString() + uploadsDir;
         if (!new File(realPathToUploads).exists()) {
@@ -473,8 +423,7 @@ public class PairwiseController {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         headers.add("Apikey", apikey);
         HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, headers);
-        return restServiceClient.invokePaloAltoService(headers, HttpMethod.POST, null, VirusScanningResponse.class,
-                endpointUrl, requestEntity);
+        return restServiceClient.invokePaloAltoService(headers, HttpMethod.POST, null, VirusScanningResponse.class, endpointUrl, requestEntity);
     }
 
     public int apiSelection() {
@@ -501,14 +450,7 @@ public class PairwiseController {
      */
     @CrossOrigin
     @ApiOperation(value = "Will download the sample example for the user", response = ResponseEntity.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Request accepted and sample file sent to frontend"),
-            @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
-            @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
-            @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"),
-            @ApiResponse(code = 400, message = "Should be a square Matrix")
-    }
-    )
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Request accepted and sample file sent to frontend"), @ApiResponse(code = 401, message = "You are not authorized to view the resource"), @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"), @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"), @ApiResponse(code = 400, message = "Should be a square Matrix")})
     @GetMapping("/example-download")
     public ResponseEntity<ByteArrayResource> exampleDownload(HttpServletResponse response) throws IOException {
         File file = Paths.get("example.csv").normalize().toAbsolutePath().toFile();
@@ -534,14 +476,7 @@ public class PairwiseController {
 
     @CrossOrigin
     @ApiOperation(value = "Finding all the Max Inconsistency greater than Tolerance", response = ResponseEntity.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = 202, message = "Request accepted and processed by the Server"),
-            @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
-            @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
-            @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"),
-            @ApiResponse(code = 400, message = "Should be a square Matrix")
-    }
-    )
+    @ApiResponses(value = {@ApiResponse(code = 202, message = "Request accepted and processed by the Server"), @ApiResponse(code = 401, message = "You are not authorized to view the resource"), @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"), @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"), @ApiResponse(code = 400, message = "Should be a square Matrix")})
     @RequestMapping(value = "/max-inconsistency", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity<Object> maxInconsistency(@RequestBody double[][] inputArray) {
@@ -569,14 +504,7 @@ public class PairwiseController {
 
     @CrossOrigin
     @ApiOperation(value = "Reduce the inconsistency of the Pairwise Matrix", response = ResponseEntity.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = 202, message = "Request accepted and processed by the Server"),
-            @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
-            @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
-            @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"),
-            @ApiResponse(code = 400, message = "Should be a square Matrix")
-    }
-    )
+    @ApiResponses(value = {@ApiResponse(code = 202, message = "Request accepted and processed by the Server"), @ApiResponse(code = 401, message = "You are not authorized to view the resource"), @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"), @ApiResponse(code = 404, message = "The resource you were trying to reach is not found"), @ApiResponse(code = 400, message = "Should be a square Matrix")})
     @RequestMapping(value = "/reduce-inconsistency", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity<Object> computeInconsistency(@RequestBody double[][] inputArray) {
@@ -610,13 +538,7 @@ public class PairwiseController {
 
     @CrossOrigin
     @ApiOperation(value = "Reset the whole Pairwise application", response = ResponseEntity.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = 202, message = "Request accepted and processed by the Server"),
-            @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
-            @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
-            @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
-    }
-    )
+    @ApiResponses(value = {@ApiResponse(code = 202, message = "Request accepted and processed by the Server"), @ApiResponse(code = 401, message = "You are not authorized to view the resource"), @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"), @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")})
     @RequestMapping(value = "/reset", method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody
     ResponseEntity<Object> reset() {
@@ -627,7 +549,7 @@ public class PairwiseController {
     /**
      * This method will reset the Matrix and delete all the entries from the database. It is a
      * It is transaction thus needs to be committed once changes are done, thus @Transactional annotation is used.
-     * */
+     */
     @Transactional
     public void resetExceptRoot() {
         List<Node> repositoryAll = nodeRepository.findAll();
@@ -635,9 +557,11 @@ public class PairwiseController {
             for (Node node : repositoryAll) {
                 if (!node.getNodeName().equalsIgnoreCase("Root")) {
                     Node parentNode = nodeRepository.findById(Long.parseLong(node.getParentNodeId())).orElse(null);
-                    parentNode.getChildren().remove(node);
-                    nodeRepository.delete(node);
-                    nodeRepository.save(parentNode);
+                    if (parentNode != null) {
+                        parentNode.getChildren().remove(node);
+                        nodeRepository.delete(node);
+                        nodeRepository.save(parentNode);
+                    }
                 }
             }
         }

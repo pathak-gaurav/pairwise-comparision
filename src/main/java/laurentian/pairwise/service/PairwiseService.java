@@ -563,6 +563,7 @@ public class PairwiseService {
         /***
          * Returning the List to UI to show into the table as well as in the Chart and in BellCurve.
          */
+        System.out.println("Total Triads: "+ list.size());
         return list;
     }
 
@@ -707,7 +708,8 @@ public class PairwiseService {
              * Checking whether any Kii value is still larger than 0.33(Threshold), if 'YES' then N will not be zero and while
              * Loop will continue.
              * */
-            N = allInconsistencyValuesAndTriad.stream().filter(element -> element.getKii() > 0.333333).count();
+            N = allInconsistencyValuesAndTriad.stream().filter(element -> element.getKii() > PairwiseController.inconsistencyTolerance).count();
+            System.out.println("Total Inconsistent Triads: "+ N);
         }
         return allInconsistencyValuesAndTriad;
     }

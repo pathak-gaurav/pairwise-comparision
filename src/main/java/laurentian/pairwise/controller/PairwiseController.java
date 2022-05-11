@@ -384,7 +384,8 @@ public class PairwiseController {
 
         if (nodeRepository.findAll().isEmpty()) {
             insertFirstThreeNode();
-            for (int i = 0; i < rowCount - (nodeRepository.findAll().size() - 1); i++) {
+            int size = nodeRepository.findAll().size();
+            for (int i = 0; i < rowCount - (size -1); i++) {
                 incrementNodeIfCountMoreThanThree();
             }
         }
@@ -543,6 +544,7 @@ public class PairwiseController {
     public @ResponseBody
     ResponseEntity<Object> reset() {
         resetExceptRoot();
+        inconsistencyTolerance = 0.33;
         return new ResponseEntity<>("Success", HttpStatus.ACCEPTED);
     }
 

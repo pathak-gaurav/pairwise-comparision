@@ -234,7 +234,7 @@ public class PairwiseController {
             resultArray = pairwiseService.updateAfterFinalize(inputArray, num);
             array = resultArray;
         } catch (NumberFormatException exception) {
-            return new ResponseEntity<>("Invalid Input, Please try Numbers", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Invalid Input, Please try Numbers greater than zero", HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(resultArray, HttpStatus.ACCEPTED);
     }

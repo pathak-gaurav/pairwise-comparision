@@ -199,7 +199,7 @@ public class PairwiseController {
         if (node.getChildren().size() < 3) {
             return new ResponseEntity("Node must have at least 3 Child Node", HttpStatus.BAD_REQUEST);
         } else {
-            if (tolerance > 0.1 && tolerance <= 1) {
+            if (tolerance >= 0.01 && tolerance <= 1) {
                 inconsistencyTolerance = tolerance;
             }
             double[][] analyzedArray = pairwiseService.analyze(node, nodeId);

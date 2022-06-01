@@ -1,5 +1,6 @@
 package laurentian.pairwise.configuration;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -20,6 +21,7 @@ import java.nio.file.Paths;
 @EnableScheduling
 @EnableSwagger2
 @EnableWebMvc
+@Slf4j
 public class SpringConfig implements WebMvcConfigurer {
 
     /**
@@ -41,6 +43,7 @@ public class SpringConfig implements WebMvcConfigurer {
         //After finding all the files based on above condition we will delete the file.
         for (File f : matchingFiles) {
             f.delete();
+            log.info("File Deleted", f.getName());
         }
     }
 

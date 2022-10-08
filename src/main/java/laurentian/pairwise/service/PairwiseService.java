@@ -64,6 +64,9 @@ public class PairwiseService {
              * Once we get the parentNodeId then from the database we will retrieve the Object of that parentNodeId.
              * */
             Node parentNode = nodeRepository.findById(Long.parseLong(parentNodeId)).orElse(null);
+            if(parentNode == null){
+                throw new RuntimeException("Parent Node does not exist with id: "+node.getParentNodeId());
+            }
 
             /** Getting the parentNode Children Count, Parent node can be any node let's say ROOT, A, B.
              * So to set the correct value of children parentNode children size is required.
@@ -144,6 +147,9 @@ public class PairwiseService {
              * Finding the node parent id, so that we can update the value in DB and in the Tree.
              */
             parentNode = nodeRepository.findById(Long.parseLong(node.getParentNodeId())).orElse(null);
+            if(parentNode == null){
+                throw new RuntimeException("Parent Node does not exist "+parentNode.getNodeName());
+            }
             /** After deleting the child node we will check how many node does the parent has left.
              * */
             int parentNodeChildren = parentNode.getChildren().size();
@@ -185,6 +191,9 @@ public class PairwiseService {
          * Once we have the Object from database we will update the object values using setter's.
          */
         Node nodeToModify = nodeRepository.findById(node.getId()).orElse(null);
+        if(nodeToModify == null){
+            throw new RuntimeException("Node is already deleted or modified: "+node.getNodeName());
+        }
         nodeToModify.setNodeName(node.getNodeName());
         /** Once updating the value of Object we will persist back it in the database.
          * */
@@ -372,10 +381,10 @@ public class PairwiseService {
                 }
             }
         }
-
+        System.out.println("reconstructedGM => " +Arrays.deepToString(reconstructedGM));
         /** Subtraction of Matrix
          * */
-        String differenceMatrix[][] = new String[rowCount][colCount];
+        String [][] differenceMatrix = new String[rowCount][colCount];
         for (int row = 0; row < rowCount; row++) {
             for (int col = 0; col < colCount; col++) {
                 DecimalFormat decimalFormatter = new DecimalFormat("##.############");
@@ -385,6 +394,7 @@ public class PairwiseService {
                 differenceMatrix[row][col] = decimalFormatter.format(round((Math.pow(tempDoubleToHold, 2)), 6)); //round(Math.pow(tempDoubleToHold,2),5);
             }
         }
+        System.out.println("differenceMatrix => " +Arrays.deepToString(differenceMatrix));
         if (numberPassed == 0) {
             return resultArray;
         }
@@ -402,6 +412,9 @@ public class PairwiseService {
     private void updateNodeToShowTreeMap(double[] product, double additionOfProductArray, Long nodeIdAnalyze) {
         /** Fetching all the nodes from the database table.
          * */
+        System.out.println("product => " + Arrays.toString(product) );
+        System.out.println("Addition of Product Array => " + additionOfProductArray );
+
         List<Node> repositoryAll = nodeRepository.findAll();
         Node tempNode = null;
         if(nodeIdAnalyze != null){

@@ -409,7 +409,7 @@ public class PairwiseController {
     }
 
     private VirusScanningResponse virusScanning(String absolutePath) {
-        String apikey = "df2198a2-7291-4161-961b-31c679598052";
+        String apikey = null;
         if (apiSelection() == 0) {
             apikey = "df2198a2-7291-4161-961b-31c679598052";
         } else {
@@ -555,7 +555,7 @@ public class PairwiseController {
     @Transactional
     public void resetExceptRoot() {
         List<Node> repositoryAll = nodeRepository.findAll();
-        if (repositoryAll.size() > 0) {
+        if (!repositoryAll.isEmpty()) {
             for (Node node : repositoryAll) {
                 if (!node.getNodeName().equalsIgnoreCase("Root")) {
                     Node parentNode = nodeRepository.findById(Long.parseLong(node.getParentNodeId())).orElse(null);
